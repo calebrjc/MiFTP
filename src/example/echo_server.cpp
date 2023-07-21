@@ -13,8 +13,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "net/buffer.hpp"
-#include "net/net.hpp"
+#include "calebrjc/net/net.hpp"
 
 #define PORT    "3490"  // the port users will be connecting to
 #define BACKLOG 10      // how many pending connections queue will hold

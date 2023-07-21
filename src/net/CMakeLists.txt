@@ -1,8 +1,16 @@
 set(HEADERS 
-    "include/net/buffer.hpp"
-    "include/net/net.hpp")
+    "include/calebrjc/net/net.hpp"
+    "include/calebrjc/net/acceptor.hpp"
+    "include/calebrjc/net/buffer.hpp"
+    "include/calebrjc/net/connection.hpp"
+    "include/calebrjc/net/endpoint.hpp")
 
-add_library(net net.cpp ${HEADERS})
+set(SOURCES
+    "acceptor.cpp"
+    "connection.cpp"
+    "endpoint.cpp")
+
+add_library(net ${SOURCES} ${HEADERS})
 target_include_directories(net PUBLIC include)
 target_compile_features(net PUBLIC cxx_std_17)
 

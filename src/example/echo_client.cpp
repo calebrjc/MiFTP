@@ -11,8 +11,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "net/buffer.hpp"
-#include "net/net.hpp"
+#include "calebrjc/net/net.hpp"
 
 #define ADDRESS         "localhost"
 #define PORT            "3490"
