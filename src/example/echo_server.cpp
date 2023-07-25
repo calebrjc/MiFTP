@@ -18,6 +18,8 @@
 #define PORT    "3490"  // the port users will be connecting to
 #define BACKLOG 10      // how many pending connections queue will hold
 
+using namespace calebrjc;
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
     if (sa->sa_family == AF_INET) { return &(((struct sockaddr_in *)sa)->sin_addr); }
@@ -25,9 +27,7 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-int main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
+void c_style() {
     // Get remote address info
     addrinfo hints;
     std::memset(&hints, 0, sizeof(hints));
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
 
-        calebrjc::Buffer remote_addr_str(INET6_ADDRSTRLEN);
+        net::Buffer remote_addr_str(INET6_ADDRSTRLEN);
         inet_ntop(
             remote_addr.ss_family,
             get_in_addr((struct sockaddr *)&remote_addr),
@@ -97,14 +97,14 @@ int main(int argc, char **argv) {
             remote_addr_str.size());
         printf("server: got connection from %s\n", remote_addr_str.data());
 
-        calebrjc::Buffer recv_buffer(1024);
+        net::Buffer recv_buffer(1024);
         if (recv(remote_fd, recv_buffer.data(), recv_buffer.size(), 0) < 0) {
             perror("recv() failed");
             exit(EXIT_FAILURE);
         }
         std::cout << "Data received: " << std::string(recv_buffer.data(), recv_buffer.size());
 
-        calebrjc::Buffer send_buffer(recv_buffer.data(), strnlen(recv_buffer.data(), 1024));
+        net::Buffer send_buffer(recv_buffer.data(), strnlen(recv_buffer.data(), 1024));
         int bytes_sent = 0;
         if ((bytes_sent = send(remote_fd, send_buffer.data(), send_buffer.size(), 0)) < 0) {
             perror("send() failed");
@@ -118,35 +118,41 @@ int main(int argc, char **argv) {
     close(socket_fd);
 }
 
-void new_style() {
+void new_style_throw() {
     // Open the acceptor
-    calebrjc::net::Acceptor acceptor({PORT});
-
-    // Make sure the acceptor is opern
-    if (!acceptor.is_open()) {
-        std::cout << "[server] error: failed to open acceptor\n";
-        exit(EXIT_FAILURE);
-    }
+    calebrjc::net::Acceptor acceptor;
+    auto server_endpoints = net::resolve(net::local_host_name, PORT);
+    acceptor.open(server_endpoints);
 
     while (1) {
-        std::cout << "[server] waiting for connection...\n";
+        // Wait for an incoming connection
+        std::cout << "[server] waiting for connection at " << acceptor.local_endpoint().str()
+                  << "...\n";
+        auto client_conn = acceptor.accept();
 
-        if (!acceptor.is_pending()) acceptor.wait();
-        calebrjc::net::Connection client_conn = acceptor.accept();
-
-        calebrjc::Buffer data = client_conn.recv();
-        if (!data) {
-            std::cout << "[server] error: failed to receive message\n";
-            exit(EXIT_FAILURE);
-        }
+        // Receive a message
+        net::Buffer data = client_conn.receive();
         std::cout << "[server] message received: " << data.str() << "\n";
 
-        bool sent = client_conn.send(data);
-        if (!sent) {
-            std::cout << "[server] error: failed to receive message\n";
-            exit(EXIT_FAILURE);
-        }
+        // Echo the message
+        client_conn.send(data);
         std::cout << "[server] sent " << data.size() << " bytes to "
                   << client_conn.remote_endpoint().str() << "\n";
     }
+}
+
+void new_style_error_code() {
+    net::Acceptor acceptor;
+    std::error_code ec;
+
+    // Resolve the server's address
+    auto server_endpoints = net::resolve(net::local_host_name, PORT, ec);
+    if (ec) { std::cout << "[server] unable to resolve local address\n"; }
+}
+
+int main(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
+    c_style();
 }

@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace calebrjc {
-
+namespace calebrjc::net {
 /// @brief A utility used to pass data around without ugly parameter passing.
 struct Buffer {
     /// @brief Create a default buffer.
@@ -21,10 +20,6 @@ struct Buffer {
     /// @brief Create a Buffer of a specific size with no meaningful data.
     /// @param size The number of bytes to be contained by the buffer.
     Buffer(size_t size) { data_.resize(size); }
-
-    ///// @brief Create a Buffer from an existing Buffer.
-    ///// @param other The Buffer to be copied from.
-    // Buffer(Buffer &other) : data_(other.data_) {}
 
     /// @brief Create a buffer from an existing POD array.
     /// @tparam T The type of the elements in the POD array.
@@ -59,4 +54,4 @@ struct Buffer {
     /// @brief The underlying storage for this Buffer.
     std::vector<char> data_;
 };
-}  // namespace calebrjc
+}  // namespace calebrjc::net

@@ -18,6 +18,8 @@
 #define MESSAGE         "Hello!\n"
 #define MAX_BUFFER_SIZE 1024
 
+using namespace calebrjc;
+
 void perror_and_exit(const char *header) {
     std::perror(header);
     std::exit(EXIT_FAILURE);
@@ -29,10 +31,7 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-int main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
-
+void c_style() {
     // Prepare hints
     addrinfo hints;
     std::memset(&hints, 0, sizeof(hints));
@@ -68,11 +67,11 @@ int main(int argc, char **argv) {
     // Fail if we can't
     if (p == NULL) {
         std::cerr << "miftp: Failed to connect to server\n";
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
     // Who did we connect to?
-    calebrjc::Buffer addr_str_buf(INET6_ADDRSTRLEN);
+    net::Buffer addr_str_buf(INET6_ADDRSTRLEN);
     inet_ntop(
         p->ai_family,
         get_in_addr((sockaddr *)p->ai_addr),
@@ -83,13 +82,13 @@ int main(int argc, char **argv) {
     freeaddrinfo(server_info);
 
     // Send message
-    calebrjc::Buffer send_buffer(MESSAGE);
+    net::Buffer send_buffer(MESSAGE);
     result = send(socket_fd, send_buffer.data(), send_buffer.size(), 0);
     if (result < 0) perror_and_exit("send() failed");
     std::cout << "Sent " << result << " bytes\n";
 
     // Receive echo
-    calebrjc::Buffer recv_buffer(MAX_BUFFER_SIZE);
+    net::Buffer recv_buffer(MAX_BUFFER_SIZE);
     recv_buffer.zero();
     result = recv(socket_fd, recv_buffer.data(), recv_buffer.size(), 0);
     if (result < 0) perror_and_exit("recv() failed");
@@ -100,30 +99,58 @@ int main(int argc, char **argv) {
     close(socket_fd);
 }
 
-void new_style() {
+void new_style_throw() {
     // Open the connection
-    calebrjc::net::Connection conn({ADDRESS, PORT});
-    std::cout << "[client] connecting to " << conn.remote_endpoint().str() << "\n";
+    net::Connection conn;
+    auto server_endpoints = net::resolve(ADDRESS, PORT);
+    conn.connect(server_endpoints);
+    std::cout << "[client] connected to " << conn.remote_endpoint().str() << "\n";
 
-    // Make sure the connection was established
-    if (!conn.is_open()) {
+    // Send message
+    conn.send(net::Buffer(MESSAGE));
+    std::cout << "[client] message sent\n";
+
+    // Receive message
+    net::Buffer response = conn.receive();
+    std::cout << "[client] message received: " << response.str() << "\n";
+}
+
+void new_style_error_code() {
+    net::Connection conn;
+    std::error_code ec;
+
+    // Resolve the server's address
+    auto server_endpoints = net::resolve(ADDRESS, PORT, ec);
+    if (ec) { std::cout << "[client] unable to resolve address\n"; }
+
+    // Open the connection
+    conn.connect(server_endpoints, ec);
+    if (ec) {
         std::cout << "[client] error: failed to esablish connection\n";
         exit(EXIT_FAILURE);
     }
+    std::cout << "[client] connected to " << conn.remote_endpoint().str() << "\n";
 
     // Send message
-    bool result = conn.send(calebrjc::Buffer(MESSAGE));
-    if (!result) {
+    conn.send(net::Buffer(MESSAGE), ec);
+    if (ec) {
         std::cout << "[client] error: failed to send message\n";
         exit(EXIT_FAILURE);
     }
     std::cout << "[client] message sent\n";
 
     // Receive message
-    calebrjc::Buffer reply = conn.recv();
-    if (!reply) {
+    net::Buffer response = conn.receive(ec);
+    if (ec) {
         std::cout << "[client] error: failed to receive message\n";
         exit(EXIT_FAILURE);
     }
-    std::cout << "[client] message received: " << reply.str() << "\n";
+    std::cout << "[client] message received: " << response.str() << "\n";
+}
+
+int main(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
+    c_style();
 }
