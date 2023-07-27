@@ -121,7 +121,7 @@ void c_style() {
 void new_style_throw() {
     // Open the acceptor
     calebrjc::net::Acceptor acceptor;
-    auto server_endpoints = net::resolve(net::local_host_name, PORT);
+    auto server_endpoints = net::resolve(net::all_local_addresses, PORT);
     acceptor.open(server_endpoints);
 
     while (1) {
@@ -146,8 +146,11 @@ void new_style_error_code() {
     std::error_code ec;
 
     // Resolve the server's address
-    auto server_endpoints = net::resolve(net::local_host_name, PORT, ec);
+    auto server_endpoints = net::resolve(net::all_local_addresses, PORT, ec);
     if (ec) { std::cout << "[server] unable to resolve local address\n"; }
+
+    std::cout << "[server] resolved endpoints:\n";
+    for (auto &e : server_endpoints) { std::cout << "[server]\t" << e.str() << "\n"; }
 }
 
 int main(int argc, char **argv) {

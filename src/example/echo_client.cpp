@@ -13,8 +13,8 @@
 
 #include "calebrjc/net/net.hpp"
 
-#define ADDRESS         "localhost"
-#define PORT            "3490"
+#define ADDRESS         "tcpbin.com"
+#define PORT            "4242"
 #define MESSAGE         "Hello!\n"
 #define MAX_BUFFER_SIZE 1024
 
@@ -121,36 +121,42 @@ void new_style_error_code() {
 
     // Resolve the server's address
     auto server_endpoints = net::resolve(ADDRESS, PORT, ec);
-    if (ec) { std::cout << "[client] unable to resolve address\n"; }
-
-    // Open the connection
-    conn.connect(server_endpoints, ec);
     if (ec) {
-        std::cout << "[client] error: failed to esablish connection\n";
+        std::cout << "[client] error: unable to resolve address (" << ec.message() << ")\n";
         exit(EXIT_FAILURE);
     }
-    std::cout << "[client] connected to " << conn.remote_endpoint().str() << "\n";
 
-    // Send message
-    conn.send(net::Buffer(MESSAGE), ec);
-    if (ec) {
-        std::cout << "[client] error: failed to send message\n";
-        exit(EXIT_FAILURE);
-    }
-    std::cout << "[client] message sent\n";
+    std::cout << "[client] resolved endpoints:\n";
+    for (auto &e : server_endpoints) { std::cout << "[client]\t" << e.str() << "\n"; }
 
-    // Receive message
-    net::Buffer response = conn.receive(ec);
-    if (ec) {
-        std::cout << "[client] error: failed to receive message\n";
-        exit(EXIT_FAILURE);
-    }
-    std::cout << "[client] message received: " << response.str() << "\n";
+    // // Open the connection
+    // conn.connect(server_endpoints, ec);
+    // if (ec) {
+    //     std::cout << "[client] error: failed to esablish connection\n";
+    //     exit(EXIT_FAILURE);
+    // }
+    // std::cout << "[client] connected to " << conn.remote_endpoint().str() << "\n";
+
+    // // Send message
+    // conn.send(net::Buffer(MESSAGE), ec);
+    // if (ec) {
+    //     std::cout << "[client] error: failed to send message\n";
+    //     exit(EXIT_FAILURE);
+    // }
+    // std::cout << "[client] message sent\n";
+
+    // // Receive message
+    // net::Buffer response = conn.receive(ec);
+    // if (ec) {
+    //     std::cout << "[client] error: failed to receive message\n";
+    //     exit(EXIT_FAILURE);
+    // }
+    // std::cout << "[client] message received: " << response.str() << "\n";
 }
 
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
 
-    c_style();
+    new_style_error_code();
 }
