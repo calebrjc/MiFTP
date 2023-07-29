@@ -129,6 +129,8 @@ void new_style_throw() {
         std::cout << "[server] waiting for connection at " << acceptor.local_endpoint().str()
                   << "...\n";
         auto client_conn = acceptor.accept();
+        std::cout << "[server] received connection from " << client_conn.remote_endpoint().str()
+                  << "\n";
 
         // Receive a message
         net::Buffer data = client_conn.receive();
@@ -147,15 +149,19 @@ void new_style_error_code() {
 
     // Resolve the server's address
     auto server_endpoints = net::resolve(net::all_local_addresses, PORT, ec);
-    if (ec) { std::cout << "[server] unable to resolve local address\n"; }
+    if (ec) { std::cout << "[server] error: unable to resolve local address\n"; }
 
-    std::cout << "[server] resolved endpoints:\n";
-    for (auto &e : server_endpoints) { std::cout << "[server]\t" << e.str() << "\n"; }
+    acceptor.open(server_endpoints, ec);
+    if (ec) { std::cout << "[server] error: unable to open acceptor socket\n"; }
+
+    while (1) {
+        
+    }
 }
 
 int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
 
-    c_style();
+    new_style_throw();
 }

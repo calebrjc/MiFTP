@@ -12,6 +12,11 @@ class Connection {
     /// @brief Create an unopened Connection.
     Connection();
 
+    /// @brief Return an open Connection created from an open native socket.
+    /// @param socket_fd The open native socket.
+    /// @return An open Connection created from an open native socket.
+    static Connection from_fd(int socket_fd);
+
     /// @brief Cleanup a Connection.
     ~Connection();
 

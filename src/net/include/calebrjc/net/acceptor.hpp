@@ -24,20 +24,16 @@ class Acceptor {
     // ---------------------------------------------------------------------------------------------
 
     /// @brief Bind this Acceptor and open it to incoming connections.
-    /// @param local_endpoints The resolved local address.
+    /// @param local_endpoint The resolved local address.
     void open(ResolveResult local_endpoint);
 
     /// @brief Bind this Acceptor and open it to incoming connections.
-    /// @param local_endpoints The resolved local address.
+    /// @param local_endpoint The resolved local address.
     /// @param ec An error_code that is set if an error occurs.
     void open(ResolveResult local_endpoint, std::error_code &ec);
 
     /// @brief Close this Acceptor from incoming connections.
     void close();
-
-    /// @brief Close this acceptor from incoming connections.
-    /// @param ec An error_code that is set if an error occurs.
-    void close(std::error_code &ec);
 
     /// @brief Return true if this Acceptor is open to incoming connections.
     /// @return True if this acceptor is open to incoming connections.
@@ -60,5 +56,9 @@ class Acceptor {
     /// not bound.
     /// @return The local endpoint that this Acceptor is bound to.
     Endpoint local_endpoint() const;
+
+   private:
+    int socket_;
+    Endpoint local_endpoint_;
 };
 }  // namespace calebrjc::net

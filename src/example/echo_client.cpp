@@ -13,8 +13,8 @@
 
 #include "calebrjc/net/net.hpp"
 
-#define ADDRESS         "tcpbin.com"
-#define PORT            "4242"
+#define ADDRESS         "localhost"
+#define PORT            "3490"
 #define MESSAGE         "Hello!\n"
 #define MAX_BUFFER_SIZE 1024
 

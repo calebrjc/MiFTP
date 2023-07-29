@@ -9,6 +9,24 @@ static const size_t max_buffer_size = 8192;
 
 Connection::Connection() : socket_(0) {}
 
+Connection Connection::from_fd(int socket_fd) {
+    Connection conn;
+
+    conn.socket_ = socket_fd;
+
+    sockaddr_storage local_ss;
+    socklen_t local_ss_len = sizeof(local_ss);
+    ::getsockname(conn.socket_, (sockaddr *)&local_ss, &local_ss_len);
+    std::memcpy(conn.local_endpoint_.data(), &local_ss, local_ss_len);
+
+    sockaddr_storage remote_ss;
+    socklen_t remote_ss_len = sizeof(local_ss);
+    ::getpeername(conn.socket_, (sockaddr *)&remote_ss, &remote_ss_len);
+    std::memcpy(conn.remote_endpoint_.data(), &remote_ss, remote_ss_len);
+
+    return conn;
+}
+
 Connection::~Connection() {
     if (is_connected()) disconnect();
 }
