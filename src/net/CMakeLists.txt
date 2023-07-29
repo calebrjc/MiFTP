@@ -4,13 +4,15 @@ set(HEADERS
     "include/calebrjc/net/buffer.hpp"
     "include/calebrjc/net/connection.hpp"
     "include/calebrjc/net/endpoint.hpp"
-    "include/calebrjc/net/resolve.hpp")
+    "include/calebrjc/net/resolve.hpp"
+    "include/calebrjc/net/detail/addr_ops.hpp")
 
 set(SOURCES
     "acceptor.cpp"
     "connection.cpp"
     "endpoint.cpp"
-    "resolve.cpp")
+    "resolve.cpp"
+    "detail/addr_ops.cpp")
 
 add_library(net ${SOURCES} ${HEADERS})
 target_include_directories(net PUBLIC include)

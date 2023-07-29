@@ -22,7 +22,7 @@ TEST_CASE("[net::resolve] Local name resolution", "[net]") {
         std::memset(&hints, 0, sizeof(hints));
         hints.ai_family   = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
-        hints.ai_flags    = AI_PASSIVE;
+        hints.ai_flags    = AI_ADDRCONFIG | AI_PASSIVE;
 
         addrinfo *server_info;
         int gai_result = getaddrinfo(NULL, port_number.c_str(), &hints, &server_info);
@@ -55,6 +55,7 @@ TEST_CASE("[net::resolve] Remote name resolution", "[net]") {
         std::memset(&hints, 0, sizeof(hints));
         hints.ai_family   = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags    = AI_ADDRCONFIG;
 
         // Address resolution
         addrinfo *remote_info;

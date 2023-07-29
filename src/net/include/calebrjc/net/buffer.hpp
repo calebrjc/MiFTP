@@ -15,7 +15,9 @@ struct Buffer {
     /// @brief Create a Buffer using existing data.
     /// @param data The data to be contained by the Buffer.
     /// @param size The number of bytes to be contained by the Buffer.
-    Buffer(const char *data, size_t size) : data_(data, data + size) {}
+    Buffer(const char *data, size_t size) : data_(size, 0) {
+        std::memcpy(data_.data(), data, size);
+    }
 
     /// @brief Create a Buffer of a specific size with no meaningful data.
     /// @param size The number of bytes to be contained by the buffer.

@@ -12,10 +12,6 @@ class Connection {
     /// @brief Create an unopened Connection.
     Connection();
 
-    /// @brief Create a Connection, bound to a local endpoint.
-    /// @param local_endpoints The resolved local endpoint that this Connection will be bound to.
-    Connection(ResolveResult local_endpoint);
-
     /// @brief Cleanup a Connection.
     ~Connection();
 
@@ -28,36 +24,23 @@ class Connection {
 
     /// @brief Create a Connection from another Connection.
     /// @param other The other Connection.
-    Connection(const Connection &&other);
+    Connection(Connection &&other);
 
     /// @brief Create a Connection from another Connection.
     /// @param other The other Connection.
-    Connection &operator=(const Connection &&other);
-
-    /// @brief Bind the local end of this Connection to the given local endpoint.
-    /// @param local_endpoint The resolved local endpoint that this Connection will be bound to.
-    void bind(ResolveResult local_endpoint);
-
-    /// @brief Bind the local end of this Connection to the given local endpoint.
-    /// @param local_endpoint The resolved local endpoint that this Connection will be bound to.
-    /// @param ec An error_code that is set if an error occurs.
-    void bind(ResolveResult local_endpoint, std::error_code &ec);
+    Connection &operator=(Connection &&other);
 
     /// @brief Establish a connection to the given remote endpoint.
-    /// @param remote_endpoint The resolved remote endpoint that this Connection will connect to.
-    void connect(ResolveResult remote_endpoint);
+    /// @param remote The resolved remote endpoint that this Connection will connect to.
+    void connect(ResolveResult remote);
 
     /// @brief Establish a connection to the given remote endpoint.
-    /// @param remote_endpoint The resolved remote endpoint that this Connection will connect to.
+    /// @param remote The resolved remote endpoint that this Connection will connect to.
     /// @param ec An error_code that is set if an error occurs.
-    void connect(ResolveResult remote_endpoint, std::error_code &ec);
+    void connect(ResolveResult remote, std::error_code &ec);
 
     /// @brief Close this Connection gracefully.
     void disconnect();
-
-    /// @brief Close this Connection gracefully.
-    /// @param ec An error_code that is set if an error occurs.
-    void disconnect(std::error_code &ec);
 
     /// @brief Send the data contained in the given Buffer to the remote endpoint of this
     /// Connection.
@@ -81,7 +64,7 @@ class Connection {
 
     /// @brief Return true if this Connection has established a connection with a remote endpoint.
     /// @return True if this Connection has established a connection with a remote endpoint.
-    bool is_open() const;
+    bool is_connected() const;
 
     /// @brief Return the local endpoint that this Connection is bound to.
     /// @return The local endpoint that this Connection is bound to.
@@ -91,5 +74,10 @@ class Connection {
     /// connection is established.
     /// @return The remote endpoint that this Connection is connected to.
     Endpoint remote_endpoint() const;
+
+   private:
+    int socket_;
+    Endpoint local_endpoint_;
+    Endpoint remote_endpoint_;
 };
 }  // namespace calebrjc::net

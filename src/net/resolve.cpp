@@ -9,10 +9,11 @@
 
 namespace calebrjc::net {
 ResolveResult resolve(std::string hostname, std::string service) {
+    // Delegate function call and throw if necessary
     std::error_code ec;
     auto result = resolve(hostname, service, ec);
 
-    if (ec) { throw ec; }
+    if (ec) throw ec;
 
     return result;
 }
@@ -26,8 +27,9 @@ ResolveResult resolve(std::string hostname, std::string service, std::error_code
     std::memset(&hints, 0, sizeof(hints));
     hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_ADDRCONFIG;
 
-    if (local_address) { hints.ai_flags = AI_PASSIVE; }
+    if (local_address) { hints.ai_flags |= AI_PASSIVE; }
 
     // Perform resolution
     addrinfo *target_info;
@@ -46,6 +48,8 @@ ResolveResult resolve(std::string hostname, std::string service, std::error_code
         std::memcpy(e.data(), ai->ai_addr, ai->ai_addrlen);
         result.push_back(e);
     }
+
+    freeaddrinfo(target_info);
 
     return result;
 }
