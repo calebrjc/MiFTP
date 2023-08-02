@@ -6,6 +6,8 @@
 
 namespace calebrjc::net {
 static const int backlog_size = 128;
+
+// TODO(Caleb): New file/namespace for socket operations?
 namespace detail {
 bool is_ready_to_read(int socket_fd, int timeout_millis) {
     pollfd pollfd;
@@ -34,13 +36,14 @@ void Acceptor::open(ResolveResult local_endpoint) {
 void Acceptor::open(ResolveResult local_endpoint, std::error_code &ec) {
     int socket_fd = 0;
     for (auto &endpoint : local_endpoint) {
+        //? Note(Caleb): Is there a better way to do this cast?
         sockaddr_storage *ss = (sockaddr_storage *)endpoint.data();
 
         socket_fd = ::socket(ss->ss_family, SOCK_STREAM, 0);
         if (socket_fd == -1) continue;
 
-        int yes        = 1;
-        int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+        int on        = 1;
+        int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
         if (sso_result == -1) continue;
 
         int bind_result = ::bind(socket_fd, (sockaddr *)ss, sizeof(*ss));
@@ -48,6 +51,7 @@ void Acceptor::open(ResolveResult local_endpoint, std::error_code &ec) {
 
         socket_ = socket_fd;
 
+        // TODO(Caleb): DRY this up (see: connection.cpp)
         sockaddr_storage local_ss;
         socklen_t local_ss_len = sizeof(local_ss);
         ::getsockname(socket_, (sockaddr *)&local_ss, &local_ss_len);
@@ -88,6 +92,7 @@ Connection Acceptor::accept() const {
 }
 
 Connection Acceptor::accept(std::error_code &ec) const {
+    // TODO(Caleb): Remove these unused variables
     sockaddr_storage remote_addr;
     socklen_t remote_addr_size = sizeof(remote_addr);
 

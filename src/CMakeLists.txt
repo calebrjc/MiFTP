@@ -1,5 +1,4 @@
 add_subdirectory(net)
-add_subdirectory(example)
 
 add_executable(miftp miftp.cpp)
 target_compile_features(miftp PRIVATE cxx_std_17)

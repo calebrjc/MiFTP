@@ -11,6 +11,7 @@ namespace calebrjc::net {
 Endpoint::Endpoint() {}
 
 char *Endpoint::data() const {
+    //? Note(Caleb): Maybe use a Buffer and union type?
     return (char *)&storage_;
 }
 

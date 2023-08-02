@@ -52,6 +52,15 @@ struct Buffer {
     /// @return The data contained by this Buffer in string form.
     std::string str() const { return std::string(data_.data(), data_.size()); }
 
+    /// @brief Return true if this Buffer contains the same data as the other Buffer.
+    /// @param other The other Buffer in this comparison.
+    /// @return True if this Buffer contains the same data as the other Buffer.
+    bool operator=(const Buffer &other) const {
+        if (size() != other.size()) return false;
+
+        return std::memcmp(data(), other.data(), size());
+    }
+
    private:
     /// @brief The underlying storage for this Buffer.
     std::vector<char> data_;

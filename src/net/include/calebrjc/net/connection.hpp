@@ -50,13 +50,13 @@ class Connection {
     /// @brief Send the data contained in the given Buffer to the remote endpoint of this
     /// Connection.
     /// @param data The data to be sent.
-    void send(Buffer data) const;
+    void send(const Buffer &data) const;
 
     /// @brief Send the data contained in the given Buffer to the remote endpoint of this
     /// Connection.
     /// @param data The data to be sent.
     /// @param ec An error_code that is set if an error occurs.
-    void send(Buffer data, std::error_code &ec) const;
+    void send(const Buffer &data, std::error_code &ec) const;
 
     /// @brief Return a Buffer containing data send from the remote endpoint of this connection.
     /// @return A Buffer containing data send from the remote endpoint of this connection.
