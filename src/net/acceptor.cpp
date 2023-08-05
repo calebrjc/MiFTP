@@ -6,6 +6,7 @@
 #include "calebrjc/net/detail/socket_ops.hpp"
 
 namespace calebrjc::net {
+/// @brief The maximum number of connections that an Acceptor may queue for accepting.
 static const int backlog_size = 128;
 
 Acceptor::Acceptor() : socket_(0) {}
@@ -14,26 +15,27 @@ Acceptor::~Acceptor() {
     if (is_open()) close();
 }
 
-void Acceptor::open(ResolveResult local_endpoint) {
+void Acceptor::open(ResolveResult local_endpoints, bool reuse_addr) {
     // Delegate function call and throw if necessary
     std::error_code ec;
-    open(local_endpoint, ec);
+    open(local_endpoints, ec, reuse_addr);
 
     if (ec) throw ec;
 }
 
-void Acceptor::open(ResolveResult local_endpoint, std::error_code &ec) {
+void Acceptor::open(ResolveResult local_endpoints, std::error_code &ec, bool reuse_addr) {
     int socket_fd = 0;
-    for (auto &endpoint : local_endpoint) {
+    for (auto &endpoint : local_endpoints) {
         // Attempt to get a socket handle
         socket_fd = ::socket(endpoint.family(), SOCK_STREAM, endpoint.protocol());
         if (socket_fd == -1) continue;
 
-        // Enable SO_REUSEADDR
-        //? Note(Caleb): Should SO_REUSEADDR be an option available in the API?
-        int on         = 1;
-        int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-        if (sso_result == -1) continue;
+        // Enable SO_REUSEADDR if necessary
+        if (reuse_addr) {
+            int on         = 1;
+            int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+            if (sso_result == -1) continue;
+        }
 
         int bind_result = ::bind(socket_fd, endpoint.data(), endpoint.size());
         if (bind_result == -1) continue;
@@ -78,7 +80,7 @@ Connection Acceptor::accept() const {
 Connection Acceptor::accept(std::error_code &ec) const {
     sockaddr_storage remote_addr;
     socklen_t remote_addr_size = sizeof(remote_addr);
-    
+
     int remote_socket_fd = ::accept(socket_, (sockaddr *)&remote_addr, &remote_addr_size);
     if (remote_socket_fd == -1) {
         ec.assign(errno, std::system_category());

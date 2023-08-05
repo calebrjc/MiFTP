@@ -24,13 +24,17 @@ class Acceptor {
     // ---------------------------------------------------------------------------------------------
 
     /// @brief Bind this Acceptor and open it to incoming connections.
-    /// @param local_endpoint The resolved local address.
-    void open(ResolveResult local_endpoint);
+    /// @param local_endpoints The resolved local address.
+    /// @param reuse_addr True if the SO_REUSEADDR option should be enabled for this acceptor, and
+    /// false otherwise (see: man 7 ip).
+    void open(ResolveResult local_endpoints, bool reuse_addr = false);
 
     /// @brief Bind this Acceptor and open it to incoming connections.
-    /// @param local_endpoint The resolved local address.
+    /// @param local_endpoints The resolved local address.
     /// @param ec An error_code that is set if an error occurs.
-    void open(ResolveResult local_endpoint, std::error_code &ec);
+    /// @param reuse_addr True if the SO_REUSEADDR option should be enabled for this acceptor, and
+    /// false otherwise (see: man 7 ip).
+    void open(ResolveResult local_endpoints, std::error_code &ec, bool reuse_addr = false);
 
     /// @brief Close this Acceptor from incoming connections.
     void close();

@@ -6,7 +6,6 @@
 #include "calebrjc/net/detail/socket_ops.hpp"
 
 namespace calebrjc::net {
-// TODO(Caleb): Should I namespace constants?
 static const size_t max_buffer_size = 8192;
 
 Connection::Connection() : socket_(0) {}
@@ -80,23 +79,26 @@ void Connection::disconnect() {
     remote_endpoint_ = Endpoint();
 }
 
-void Connection::send(const Buffer &data /*, SendFlags flags = SendFlags::none */) const {
+void Connection::send(const Buffer &data, uint32_t flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
-    send(data, ec);
+    send(data, flags, ec);
 
     if (ec) throw ec;
 }
 
-void Connection::send(
-    const Buffer &data, /*, SendFlags flags = SendFlags::none, */ std::error_code &ec) const {
+void Connection::send(const Buffer &data, std::error_code &ec) const {
+    send(data, 0, ec);
+}
+
+void Connection::send(const Buffer &data, uint32_t flags, std::error_code &ec) const {
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
 
     int bytes_sent = 0;
     while (bytes_sent < data.size()) {
         int send_result =
-            ::send(socket_, send_buffer + bytes_sent, send_buffer_size - bytes_sent, 0);
+            ::send(socket_, send_buffer + bytes_sent, send_buffer_size - bytes_sent, flags);
         if (send_result == -1) {
             ec.assign(errno, std::system_category());
             return;
@@ -105,10 +107,10 @@ void Connection::send(
     }
 }
 
-Buffer Connection::receive() const {
+Buffer Connection::receive(uint32_t flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
-    auto data = receive(ec);
+    auto data = receive(flags, ec);
 
     if (ec) throw ec;
 
@@ -116,9 +118,13 @@ Buffer Connection::receive() const {
 }
 
 Buffer Connection::receive(std::error_code &ec) const {
+    return receive(0, ec);
+}
+
+Buffer Connection::receive(uint32_t flags, std::error_code &ec) const {
     char receive_buffer[max_buffer_size];
 
-    int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, 0);
+    int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, flags);
     if (recv_result == -1) {
         ec.assign(errno, std::system_category());
         return Buffer();

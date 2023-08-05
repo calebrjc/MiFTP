@@ -1,5 +1,7 @@
 #include "calebrjc/net/net.hpp"
 
+#include <iostream>
+
 using namespace calebrjc;
 
 int main(int argc, char **argv) {
@@ -14,7 +16,7 @@ int main(int argc, char **argv) {
     auto server_endpoints = net::resolve(net::any_address, service, ec);
     if (ec) return EXIT_FAILURE;
 
-    acceptor.open(server_endpoints, ec);
+    acceptor.open(server_endpoints, ec, true);
     if (ec) return EXIT_FAILURE;
 
     auto client_conn = acceptor.accept(ec);
