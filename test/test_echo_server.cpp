@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     std::error_code ec;
 
     // Resolve the server's address
-    auto server_endpoints = net::resolve(net::all_local_interfaces, service, ec);
+    auto server_endpoints = net::resolve(net::any_address, service, ec);
     if (ec) return EXIT_FAILURE;
 
     acceptor.open(server_endpoints, ec);

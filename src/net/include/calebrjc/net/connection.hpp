@@ -14,8 +14,9 @@ class Connection {
 
     /// @brief Return an open Connection created from an open native socket.
     /// @param socket_fd The open native socket.
+    /// @param remote_endpoint An Endpoint representing the remote end of the Connection.
     /// @return An open Connection created from an open native socket.
-    static Connection from_fd(int socket_fd);
+    static Connection from_fd(int socket_fd, Endpoint remote_endpoint);
 
     /// @brief Cleanup a Connection.
     ~Connection();

@@ -2,7 +2,8 @@
 
 #include <unistd.h>
 
-#include "calebrjc/net/detail/addr_ops.hpp"
+#include "calebrjc/net/detail/sockaddr_ops.hpp"
+#include "calebrjc/net/detail/socket_ops.hpp"
 
 namespace calebrjc::net {
 // TODO(Caleb): Should I namespace constants?
@@ -10,21 +11,11 @@ static const size_t max_buffer_size = 8192;
 
 Connection::Connection() : socket_(0) {}
 
-Connection Connection::from_fd(int socket_fd) {
+Connection Connection::from_fd(int socket_fd, Endpoint remote_endpoint) {
     Connection conn;
-
-    conn.socket_ = socket_fd;
-
-    // TODO(Caleb): DRY this up
-    sockaddr_storage local_ss;
-    socklen_t local_ss_len = sizeof(local_ss);
-    ::getsockname(conn.socket_, (sockaddr *)&local_ss, &local_ss_len);
-    std::memcpy(conn.local_endpoint_.data(), &local_ss, local_ss_len);
-
-    sockaddr_storage remote_ss;
-    socklen_t remote_ss_len = sizeof(local_ss);
-    ::getpeername(conn.socket_, (sockaddr *)&remote_ss, &remote_ss_len);
-    std::memcpy(conn.remote_endpoint_.data(), &remote_ss, remote_ss_len);
+    conn.socket_          = socket_fd;
+    conn.local_endpoint_  = detail::socket_ops::get_local_endpoint(conn.socket_);
+    conn.remote_endpoint_ = remote_endpoint;
 
     return conn;
 }
@@ -61,17 +52,15 @@ void Connection::connect(ResolveResult remote, std::error_code &ec) {
     // Attempt to create a connected socket
     int socket_fd = 0;
     for (auto &endpoint : remote) {
-        //? Note(Caleb): Is there a better way to do this cast?
-        sockaddr_storage *ss = (sockaddr_storage *)endpoint.data();
-
-        socket_fd = ::socket(ss->ss_family, SOCK_STREAM, 0);
+        socket_fd = ::socket(endpoint.family(), SOCK_STREAM, endpoint.protocol());
         if (socket_fd == -1) { continue; }
 
-        int connect_result = ::connect(socket_fd, (sockaddr *)ss, sizeof(*ss));
+        int connect_result = ::connect(socket_fd, endpoint.data(), endpoint.size());
         if (connect_result == -1) { continue; }
 
         socket_          = socket_fd;
         remote_endpoint_ = endpoint;
+        local_endpoint_  = detail::socket_ops::get_local_endpoint(socket_);
         break;
     }
 
@@ -80,12 +69,6 @@ void Connection::connect(ResolveResult remote, std::error_code &ec) {
         ec.assign(errno, std::system_category());
         return;
     }
-
-    // TODO(Caleb): DRY this up
-    sockaddr_storage local_ss;
-    socklen_t local_ss_len = sizeof(local_ss);
-    ::getsockname(socket_, (sockaddr *)&local_ss, &local_ss_len);
-    std::memcpy(local_endpoint_.data(), &local_ss, local_ss_len);
 }
 
 void Connection::disconnect() {
@@ -97,7 +80,7 @@ void Connection::disconnect() {
     remote_endpoint_ = Endpoint();
 }
 
-void Connection::send(const Buffer &data) const {
+void Connection::send(const Buffer &data /*, SendFlags flags = SendFlags::none */) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     send(data, ec);
@@ -105,7 +88,8 @@ void Connection::send(const Buffer &data) const {
     if (ec) throw ec;
 }
 
-void Connection::send(const Buffer &data, std::error_code &ec) const {
+void Connection::send(
+    const Buffer &data, /*, SendFlags flags = SendFlags::none, */ std::error_code &ec) const {
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
 
