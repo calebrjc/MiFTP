@@ -65,6 +65,7 @@ bool Acceptor::is_open() const {
 
 bool Acceptor::is_pending() const {
     return detail::socket_ops::is_ready_to_read(socket_, 0);
+    // return detail::socket_ops::poll_socket(socket_, detail::socket_status::readable)
 }
 
 Connection Acceptor::accept() const {
@@ -89,7 +90,7 @@ Connection Acceptor::accept(std::error_code &ec) const {
 
     auto remote_endpoint = Endpoint::from_native_address(
         local_endpoint_.protocol(), (sockaddr *)&remote_addr, remote_addr_size);
-    return Connection::from_fd(remote_socket_fd, remote_endpoint);
+    return Connection::from_native_socket(remote_socket_fd, remote_endpoint);
 }
 
 Endpoint Acceptor::local_endpoint() const {

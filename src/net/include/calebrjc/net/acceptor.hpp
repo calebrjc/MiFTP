@@ -6,12 +6,13 @@
 #include "resolve.hpp"
 
 namespace calebrjc::net {
+/// @brief A networking entity that allows a host to listen for and accept incoming Connections.
 class Acceptor {
    public:
     /// @brief Create an unopened and unbound Acceptor.
     Acceptor();
 
-    /// @brief Cleanup an Acceptor.
+    /// @brief Cleanup after an Acceptor.
     ~Acceptor();
 
     // Disable copies and moves --------------------------------------------------------------------
@@ -23,20 +24,20 @@ class Acceptor {
 
     // ---------------------------------------------------------------------------------------------
 
-    /// @brief Bind this Acceptor and open it to incoming connections.
+    /// @brief Bind this Acceptor to the resolved local address and open it to incoming connections.
     /// @param local_endpoints The resolved local address.
     /// @param reuse_addr True if the SO_REUSEADDR option should be enabled for this acceptor, and
     /// false otherwise (see: man 7 ip).
     void open(ResolveResult local_endpoints, bool reuse_addr = false);
 
-    /// @brief Bind this Acceptor and open it to incoming connections.
+    /// @brief Bind this Acceptor to the resolved local address and open it to incoming connections.
     /// @param local_endpoints The resolved local address.
     /// @param ec An error_code that is set if an error occurs.
     /// @param reuse_addr True if the SO_REUSEADDR option should be enabled for this acceptor, and
     /// false otherwise (see: man 7 ip).
     void open(ResolveResult local_endpoints, std::error_code &ec, bool reuse_addr = false);
 
-    /// @brief Close this Acceptor from incoming connections.
+    /// @brief Stop this Acceptor from accepting incoming connections and close it.
     void close();
 
     /// @brief Return true if this Acceptor is open to incoming connections.

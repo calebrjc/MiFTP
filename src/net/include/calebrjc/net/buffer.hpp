@@ -7,17 +7,15 @@
 #include <vector>
 
 namespace calebrjc::net {
-/// @brief A utility used to pass data around without ugly parameter passing.
+/// @brief A utility used to wrap normal buffer operations for convenience.
 struct Buffer {
-    /// @brief Create a default buffer.
-    Buffer() : data_() {}
+    /// @brief Create an empty buffer.
+    Buffer() {}
 
     /// @brief Create a Buffer using existing data.
     /// @param data The data to be contained by the Buffer.
     /// @param size The number of bytes to be contained by the Buffer.
-    Buffer(const char *data, size_t size) : data_(size, 0) {
-        std::memcpy(data_.data(), data, size);
-    }
+    Buffer(const char *data, size_t size) : data_(data, data + size) {}
 
     /// @brief Create a Buffer of a specific size with no meaningful data.
     /// @param size The number of bytes to be contained by the buffer.
@@ -55,7 +53,7 @@ struct Buffer {
     /// @brief Return true if this Buffer contains the same data as the other Buffer.
     /// @param other The other Buffer in this comparison.
     /// @return True if this Buffer contains the same data as the other Buffer.
-    bool operator=(const Buffer &other) const {
+    bool operator==(const Buffer &other) const {
         if (size() != other.size()) return false;
 
         return std::memcmp(data(), other.data(), size());

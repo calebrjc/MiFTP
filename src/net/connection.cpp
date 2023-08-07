@@ -5,12 +5,12 @@
 #include "calebrjc/net/detail/sockaddr_ops.hpp"
 #include "calebrjc/net/detail/socket_ops.hpp"
 
-namespace calebrjc::net {
 static const size_t max_buffer_size = 8192;
 
+namespace calebrjc::net {
 Connection::Connection() : socket_(0) {}
 
-Connection Connection::from_fd(int socket_fd, Endpoint remote_endpoint) {
+Connection Connection::from_native_socket(int socket_fd, Endpoint remote_endpoint) {
     Connection conn;
     conn.socket_          = socket_fd;
     conn.local_endpoint_  = detail::socket_ops::get_local_endpoint(conn.socket_);

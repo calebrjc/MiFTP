@@ -14,17 +14,17 @@ int main(int argc, char **argv) {
 
     // Resolve the server's address
     auto server_endpoints = net::resolve(net::any_address, service, ec);
-    if (ec) return EXIT_FAILURE;
+    if (ec) return 64;
 
     acceptor.open(server_endpoints, ec, true);
-    if (ec) return EXIT_FAILURE;
+    if (ec) return 65;
 
     auto client_conn = acceptor.accept(ec);
-    if (ec) return EXIT_FAILURE;
+    if (ec) return 66;
 
     net::Buffer data = client_conn.receive(ec);
-    if (ec) return EXIT_FAILURE;
+    if (ec) return 67;
 
     client_conn.send(data);
-    if (ec) return EXIT_FAILURE;
+    if (ec) return 68;
 }

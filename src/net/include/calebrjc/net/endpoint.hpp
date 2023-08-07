@@ -32,6 +32,8 @@ struct Endpoint {
     /// @return A pointer to the underlying native storage for this Endpoint.
     const sockaddr *data() const;
 
+    /// @brief Return the size of the native address stored by this Endpoint.
+    /// @return The size of the native address stored by this Endpoint.
     socklen_t size() const;
 
     /// @brief Return the IP address referred to by this Endpoint in string form.
