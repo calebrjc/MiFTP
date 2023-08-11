@@ -6,6 +6,7 @@ set(HEADERS
     "include/calebrjc/net/connection.hpp"
     "include/calebrjc/net/endpoint.hpp"
     "include/calebrjc/net/resolve.hpp"
+    "include/calebrjc/net/detail/flag_set.hpp"
     "include/calebrjc/net/detail/getaddrinfo.hpp"
     "include/calebrjc/net/detail/sockaddr_ops.hpp"
     "include/calebrjc/net/detail/socket_ops.hpp")

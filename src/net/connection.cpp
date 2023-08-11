@@ -79,7 +79,7 @@ void Connection::disconnect() {
     remote_endpoint_ = Endpoint();
 }
 
-void Connection::send(const Buffer &data, uint32_t flags) const {
+void Connection::send(const Buffer &data, SendFlags flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     send(data, flags, ec);
@@ -88,10 +88,10 @@ void Connection::send(const Buffer &data, uint32_t flags) const {
 }
 
 void Connection::send(const Buffer &data, std::error_code &ec) const {
-    send(data, 0, ec);
+    send(data, SendFlags(), ec);
 }
 
-void Connection::send(const Buffer &data, uint32_t flags, std::error_code &ec) const {
+void Connection::send(const Buffer &data, SendFlags flags, std::error_code &ec) const {
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
 
@@ -107,7 +107,7 @@ void Connection::send(const Buffer &data, uint32_t flags, std::error_code &ec) c
     }
 }
 
-Buffer Connection::receive(uint32_t flags) const {
+Buffer Connection::receive(ReceiveFlags flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     auto data = receive(flags, ec);
@@ -118,10 +118,10 @@ Buffer Connection::receive(uint32_t flags) const {
 }
 
 Buffer Connection::receive(std::error_code &ec) const {
-    return receive(0, ec);
+    return receive(ReceiveFlags(), ec);
 }
 
-Buffer Connection::receive(uint32_t flags, std::error_code &ec) const {
+Buffer Connection::receive(ReceiveFlags flags, std::error_code &ec) const {
     char receive_buffer[max_buffer_size];
 
     int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, flags);
