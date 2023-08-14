@@ -17,10 +17,10 @@ class Acceptor {
 
     // Disable copies and moves --------------------------------------------------------------------
 
-    Acceptor(const Acceptor &other)               = delete;
-    Acceptor &operator=(const Acceptor &other)    = delete;
-    Acceptor(const Connection &&other)            = delete;
-    Acceptor &operator=(const Connection &&other) = delete;
+    Acceptor(const Acceptor &other)             = delete;
+    Acceptor &operator=(const Acceptor &other)  = delete;
+    Acceptor(const Acceptor &&other)            = delete;
+    Acceptor &operator=(const Acceptor &&other) = delete;
 
     // ---------------------------------------------------------------------------------------------
 

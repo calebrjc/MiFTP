@@ -12,6 +12,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Let's nicely support folders in IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Add libs
+add_subdirectory(external)
+
 # Add code
 add_subdirectory(src)
 

@@ -79,7 +79,7 @@ void Connection::disconnect() {
     remote_endpoint_ = Endpoint();
 }
 
-void Connection::send(const Buffer &data, SendFlags flags) const {
+void Connection::send(const Buffer &data, send_flags_mask flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     send(data, flags, ec);
@@ -88,17 +88,22 @@ void Connection::send(const Buffer &data, SendFlags flags) const {
 }
 
 void Connection::send(const Buffer &data, std::error_code &ec) const {
-    send(data, SendFlags(), ec);
+    send(data, send_flags::none, ec);
 }
 
-void Connection::send(const Buffer &data, SendFlags flags, std::error_code &ec) const {
+void Connection::send(const Buffer &data, send_flags_mask flags, std::error_code &ec) const {
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
+
+    // Translate flags
+    int send_flags = 0;
+    send_flags |= (flags & send_flags::dont_route) ? MSG_DONTROUTE : 0;
+    send_flags |= (flags & send_flags::end_of_record) ? MSG_EOR : 0;
 
     int bytes_sent = 0;
     while (bytes_sent < data.size()) {
         int send_result =
-            ::send(socket_, send_buffer + bytes_sent, send_buffer_size - bytes_sent, flags);
+            ::send(socket_, send_buffer + bytes_sent, send_buffer_size - bytes_sent, send_flags);
         if (send_result == -1) {
             ec.assign(errno, std::system_category());
             return;
@@ -107,7 +112,7 @@ void Connection::send(const Buffer &data, SendFlags flags, std::error_code &ec) 
     }
 }
 
-Buffer Connection::receive(ReceiveFlags flags) const {
+Buffer Connection::receive(receive_flags_mask flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     auto data = receive(flags, ec);
@@ -118,13 +123,17 @@ Buffer Connection::receive(ReceiveFlags flags) const {
 }
 
 Buffer Connection::receive(std::error_code &ec) const {
-    return receive(ReceiveFlags(), ec);
+    return receive(receive_flags::none, ec);
 }
 
-Buffer Connection::receive(ReceiveFlags flags, std::error_code &ec) const {
+Buffer Connection::receive(receive_flags_mask flags, std::error_code &ec) const {
     char receive_buffer[max_buffer_size];
 
-    int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, flags);
+    // Translate flags
+    int recv_flags = 0;
+    recv_flags |= (flags & receive_flags::peek) ? MSG_PEEK : 0;
+
+    int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, recv_flags);
     if (recv_result == -1) {
         ec.assign(errno, std::system_category());
         return Buffer();

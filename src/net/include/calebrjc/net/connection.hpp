@@ -2,8 +2,8 @@
 
 #include <system_error>
 
+#include "bitmask/bitmask.hpp"
 #include "calebrjc/net/buffer.hpp"
-#include "calebrjc/net/detail/flag_set.hpp"
 #include "calebrjc/net/endpoint.hpp"
 #include "calebrjc/net/resolve.hpp"
 
@@ -11,27 +11,27 @@ namespace calebrjc::net {
 
 /// @brief Flags used to customize calls to Connection::send().
 enum class send_flags {
-    /// @brief A flag that specifies that the sent data should not be subject to routing.
-    dont_route = MSG_DONTROUTE,
+    none = 0,
 
     /// @brief A flag that specifies that the sent data should not be subject to routing.
-    end_of_record = MSG_EOR,
+    dont_route = 0x01,
 
-    /// Sentinel value (do not remove)
-    _,
+    /// @brief A flag that specifies that the sent data should not be subject to routing.
+    end_of_record = 0x02,
 };
-using SendFlags = detail::FlagSet<send_flags>;
+BITMASK_DEFINE_MAX_ELEMENT(send_flags, end_of_record)
+using send_flags_mask = bitmask::bitmask<send_flags>;
 
 /// @brief Flags used to customize calls to Connection::receive().
 enum class receive_flags {
+    none = 0,
+
     /// @brief A flag that specifies that the received data should be returned, but not taken off of
     /// the input queue.
-    peek = MSG_PEEK,
-
-    /// Sentinel value (do not remove)
-    _,
+    peek = 0x01,
 };
-using ReceiveFlags = detail::FlagSet<receive_flags>;
+BITMASK_DEFINE_MAX_ELEMENT(receive_flags, peek)
+using receive_flags_mask = bitmask::bitmask<receive_flags>;
 
 /// @brief A networking entity that allows communication between the host and another endpoint,
 /// local or remote.
@@ -83,7 +83,7 @@ class Connection {
     /// Connection.
     /// @param data The data to be sent.
     /// @param flags A bitfield of send_flags constants used to customize this call to send().
-    void send(const Buffer &data, SendFlags flags = SendFlags()) const;
+    void send(const Buffer &data, send_flags_mask flags = send_flags::none) const;
 
     /// @brief Send the data contained in the given Buffer to the remote endpoint of this
     /// Connection.
@@ -96,13 +96,13 @@ class Connection {
     /// @param data The data to be sent.
     /// @param flags A bitfield of send_flags constants used to customize this call to send().
     /// @param ec An error_code that is set if an error occurs.
-    void send(const Buffer &data, SendFlags flags, std::error_code &ec) const;
+    void send(const Buffer &data, send_flags_mask flags, std::error_code &ec) const;
 
     /// @brief Return a Buffer containing data send from the remote endpoint of this connection.
     /// @return A Buffer containing data send from the remote endpoint of this connection.
     /// @param flags A bitfield of receive_flags constants used to customize this call to
     /// receive().
-    Buffer receive(ReceiveFlags flags = ReceiveFlags()) const;
+    Buffer receive(receive_flags_mask flags = receive_flags::none) const;
 
     /// @brief Return a Buffer containing data send from the remote endpoint of this connection.
     /// @return A Buffer containing data send from the remote endpoint of this connection.
@@ -114,7 +114,7 @@ class Connection {
     /// @param flags A bitfield of receive_flags constants used to customize this call to
     /// receive().
     /// @param ec An error_code that is set if an error occurs.
-    Buffer receive(ReceiveFlags flags, std::error_code &ec) const;
+    Buffer receive(receive_flags_mask flags, std::error_code &ec) const;
 
     /// @brief Return true if this Connection has established a connection with a remote endpoint.
     /// @return True if this Connection has established a connection with a remote endpoint.
