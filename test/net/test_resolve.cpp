@@ -14,7 +14,7 @@ using namespace calebrjc;
 /// @param rr The net::ResolveResult to be compared.
 /// @param ai The addrinfo * to be compared.
 /// @return True if the data in rr is equal to the data in ai, and false otherwise.
-bool rr_ai_compare(net::ResolveResult rr, addrinfo *ai) {
+bool rr_ai_compare(net::resolve_result rr, addrinfo *ai) {
     // Equal if both are empty...
     if (!ai && rr.empty()) return true;
 

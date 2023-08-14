@@ -8,10 +8,10 @@
 static const size_t max_buffer_size = 8192;
 
 namespace calebrjc::net {
-Connection::Connection() : socket_(0) {}
+connection::connection() : socket_(0) {}
 
-Connection Connection::from_native_socket(int socket_fd, Endpoint remote_endpoint) {
-    Connection conn;
+connection connection::from_native_socket(int socket_fd, endpoint remote_endpoint) {
+    connection conn;
     conn.socket_          = socket_fd;
     conn.local_endpoint_  = detail::socket_ops::get_local_endpoint(conn.socket_);
     conn.remote_endpoint_ = remote_endpoint;
@@ -19,27 +19,27 @@ Connection Connection::from_native_socket(int socket_fd, Endpoint remote_endpoin
     return conn;
 }
 
-Connection::~Connection() {
+connection::~connection() {
     if (is_connected()) disconnect();
 }
 
-Connection::Connection(Connection &&other) {
+connection::connection(connection &&other) {
     *this = std::move(other);
 }
 
-Connection &Connection::operator=(Connection &&other) {
+connection &connection::operator=(connection &&other) {
     socket_          = other.socket_;
     local_endpoint_  = other.local_endpoint_;
     remote_endpoint_ = other.remote_endpoint_;
 
     other.socket_          = 0;
-    other.local_endpoint_  = Endpoint();
-    other.remote_endpoint_ = Endpoint();
+    other.local_endpoint_  = endpoint();
+    other.remote_endpoint_ = endpoint();
 
     return *this;
 }
 
-void Connection::connect(ResolveResult remote) {
+void connection::connect(resolve_result remote) {
     // Delegate function call and throw if necessary
     std::error_code ec;
     connect(remote, ec);
@@ -47,7 +47,7 @@ void Connection::connect(ResolveResult remote) {
     if (ec) throw ec;
 }
 
-void Connection::connect(ResolveResult remote, std::error_code &ec) {
+void connection::connect(resolve_result remote, std::error_code &ec) {
     // Attempt to create a connected socket
     int socket_fd = 0;
     for (auto &endpoint : remote) {
@@ -70,16 +70,16 @@ void Connection::connect(ResolveResult remote, std::error_code &ec) {
     }
 }
 
-void Connection::disconnect() {
+void connection::disconnect() {
     ::shutdown(socket_, SHUT_RDWR);
     ::close(socket_);
 
     socket_          = 0;
-    local_endpoint_  = Endpoint();
-    remote_endpoint_ = Endpoint();
+    local_endpoint_  = endpoint();
+    remote_endpoint_ = endpoint();
 }
 
-void Connection::send(const Buffer &data, send_flags_mask flags) const {
+void connection::send(const buffer &data, send_flags_mask flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     send(data, flags, ec);
@@ -87,11 +87,11 @@ void Connection::send(const Buffer &data, send_flags_mask flags) const {
     if (ec) throw ec;
 }
 
-void Connection::send(const Buffer &data, std::error_code &ec) const {
+void connection::send(const buffer &data, std::error_code &ec) const {
     send(data, send_flags::none, ec);
 }
 
-void Connection::send(const Buffer &data, send_flags_mask flags, std::error_code &ec) const {
+void connection::send(const buffer &data, send_flags_mask flags, std::error_code &ec) const {
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
 
@@ -112,7 +112,7 @@ void Connection::send(const Buffer &data, send_flags_mask flags, std::error_code
     }
 }
 
-Buffer Connection::receive(receive_flags_mask flags) const {
+buffer connection::receive(receive_flags_mask flags) const {
     // Delegate function call and throw if necessary
     std::error_code ec;
     auto data = receive(flags, ec);
@@ -122,11 +122,11 @@ Buffer Connection::receive(receive_flags_mask flags) const {
     return data;
 }
 
-Buffer Connection::receive(std::error_code &ec) const {
+buffer connection::receive(std::error_code &ec) const {
     return receive(receive_flags::none, ec);
 }
 
-Buffer Connection::receive(receive_flags_mask flags, std::error_code &ec) const {
+buffer connection::receive(receive_flags_mask flags, std::error_code &ec) const {
     char receive_buffer[max_buffer_size];
 
     // Translate flags
@@ -136,20 +136,20 @@ Buffer Connection::receive(receive_flags_mask flags, std::error_code &ec) const 
     int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, recv_flags);
     if (recv_result == -1) {
         ec.assign(errno, std::system_category());
-        return Buffer();
+        return buffer();
     }
 
-    return Buffer(receive_buffer, recv_result);
+    return buffer(receive_buffer, recv_result);
 }
 
-bool Connection::is_connected() const {
+bool connection::is_connected() const {
     return socket_ == 0;
 }
 
-Endpoint Connection::local_endpoint() const {
+endpoint connection::local_endpoint() const {
     return local_endpoint_;
 }
-Endpoint Connection::remote_endpoint() const {
+endpoint connection::remote_endpoint() const {
     return remote_endpoint_;
 }
 }  // namespace calebrjc::net

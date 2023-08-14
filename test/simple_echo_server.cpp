@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
     std::string service(argv[1]);
 
-    net::Acceptor acceptor;
+    net::acceptor acceptor;
     std::error_code ec;
 
     // Resolve the server's address
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     auto client_conn = acceptor.accept(ec);
     if (ec) return 66;
 
-    net::Buffer data = client_conn.receive(ec);
+    net::buffer data = client_conn.receive(ec);
     if (ec) return 67;
 
     client_conn.send(data);

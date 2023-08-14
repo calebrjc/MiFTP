@@ -8,10 +8,10 @@
 #include "calebrjc/net/detail/sockaddr_ops.hpp"
 
 namespace calebrjc::net {
-Endpoint::Endpoint() {}
+endpoint::endpoint() {}
 
-Endpoint Endpoint::from_native_address(int protocol, sockaddr *addr, socklen_t addr_size) {
-    Endpoint e;
+endpoint endpoint::from_native_address(int protocol, sockaddr *addr, socklen_t addr_size) {
+    endpoint e;
     e.protocol_ = protocol;
     std::memcpy(e.data(), addr, addr_size);
     e.storage_size_ = addr_size;
@@ -19,30 +19,30 @@ Endpoint Endpoint::from_native_address(int protocol, sockaddr *addr, socklen_t a
     return e;
 }
 
-sa_family_t Endpoint::family() const {
+sa_family_t endpoint::family() const {
     return storage_.ss_family;
 }
 
-int Endpoint::protocol() const {
+int endpoint::protocol() const {
     return protocol_;
 }
 
-sockaddr *Endpoint::data() {
-    //? Note(Caleb): Maybe use a Buffer and union type?
+sockaddr *endpoint::data() {
+    //? Note(Caleb): Maybe use a buffer and union type?
     return (sockaddr *)&storage_;
 }
 
-const sockaddr *Endpoint::data() const {
-    //? Note(Caleb): Maybe use a Buffer and union type?
+const sockaddr *endpoint::data() const {
+    //? Note(Caleb): Maybe use a buffer and union type?
     return (sockaddr *)&storage_;
 }
 
-socklen_t Endpoint::size() const {
+socklen_t endpoint::size() const {
     return storage_size_;
 }
 
-std::string Endpoint::addr() const {
-    Buffer buffer(INET6_ADDRSTRLEN);
+std::string endpoint::addr() const {
+    buffer buffer(INET6_ADDRSTRLEN);
     inet_ntop(AF_INET, detail::sockaddr_ops::get_in_addr(data()), buffer.data(), buffer.size());
 
     switch (storage_.ss_family) {
@@ -55,7 +55,7 @@ std::string Endpoint::addr() const {
     }
 }
 
-std::string Endpoint::port() const {
+std::string endpoint::port() const {
     switch (storage_.ss_family) {
         case AF_INET:
         case AF_INET6:
@@ -65,7 +65,7 @@ std::string Endpoint::port() const {
     }
 }
 
-std::string Endpoint::str() const {
+std::string endpoint::str() const {
     std::stringstream ss;
     switch (storage_.ss_family) {
         case AF_INET:

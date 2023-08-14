@@ -11,7 +11,7 @@
 #include "calebrjc/net/detail/getaddrinfo.hpp"
 
 namespace calebrjc::net {
-ResolveResult resolve(std::string hostname, std::string service) {
+resolve_result resolve(std::string hostname, std::string service) {
     // Delegate function call and throw if necessary
     std::error_code ec;
     auto result = resolve(hostname, service, ec);
@@ -21,7 +21,7 @@ ResolveResult resolve(std::string hostname, std::string service) {
     return result;
 }
 
-ResolveResult resolve(std::string hostname, std::string service, std::error_code &ec) {
+resolve_result resolve(std::string hostname, std::string service, std::error_code &ec) {
     addrinfo *target_info = detail::getaddrinfo(hostname, service);
     if (!target_info) {
         // TODO(Caleb): Error handling here
@@ -30,9 +30,9 @@ ResolveResult resolve(std::string hostname, std::string service, std::error_code
     }
 
     // Pack result
-    ResolveResult result;
+    resolve_result result;
     for (addrinfo *ai = target_info; ai != nullptr; ai = ai->ai_next) {
-        auto e = Endpoint::from_native_address(ai->ai_protocol, ai->ai_addr, ai->ai_addrlen);
+        auto e = endpoint::from_native_address(ai->ai_protocol, ai->ai_addr, ai->ai_addrlen);
         result.push_back(e);
     }
 

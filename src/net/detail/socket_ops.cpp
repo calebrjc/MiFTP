@@ -4,7 +4,7 @@
 
 namespace calebrjc::net::detail::socket_ops {
 namespace detail {
-Endpoint get_endpoint(int socket_fd, bool local_socket) {
+endpoint get_endpoint(int socket_fd, bool local_socket) {
     // Get address
     sockaddr_storage ss;
     socklen_t ss_size = sizeof(ss);
@@ -24,15 +24,15 @@ Endpoint get_endpoint(int socket_fd, bool local_socket) {
     int gso_result = getsockopt(socket_fd, SOL_SOCKET, SO_PROTOCOL, &protocol, &protocol_size);
     //? Note(Caleb): We should probably check for errors here. Maybe use error_code?
 
-    return Endpoint::from_native_address(protocol, (sockaddr *)&ss, ss_size);
+    return endpoint::from_native_address(protocol, (sockaddr *)&ss, ss_size);
 }
 }  // namespace detail
 
-Endpoint get_local_endpoint(int socket_fd) {
+endpoint get_local_endpoint(int socket_fd) {
     return detail::get_endpoint(socket_fd, true);
 }
 
-Endpoint get_remote_endpoint(int socket_fd) {
+endpoint get_remote_endpoint(int socket_fd) {
     return detail::get_endpoint(socket_fd, false);
 }
 

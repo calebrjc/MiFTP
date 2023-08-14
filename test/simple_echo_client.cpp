@@ -9,9 +9,9 @@ int main(int argc, char **argv) {
 
     std::string name(argv[1]);
     std::string service(argv[2]);
-    net::Buffer message(MESSAGE);
+    net::buffer message(MESSAGE);
 
-    net::Connection conn;
+    net::connection conn;
     std::error_code ec;
 
     // Resolve the server's address
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     if (ec) return 66;
 
     // Receive message
-    net::Buffer response = conn.receive(ec);
+    net::buffer response = conn.receive(ec);
     if (ec) return 67;
 
     if (response != message) return 68;
