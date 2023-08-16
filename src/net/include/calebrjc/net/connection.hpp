@@ -6,29 +6,25 @@
 #include "calebrjc/net/buffer.hpp"
 #include "calebrjc/net/endpoint.hpp"
 #include "calebrjc/net/resolve.hpp"
+#include "calebrjc/net/types.hpp"
 
 namespace calebrjc::net {
 
 /// @brief Flags used to customize calls to connection::send().
 enum class send_flags {
-    none = 0,
-
-    /// @brief A flag that specifies that the sent data should not be subject to routing.
-    dont_route = 0x01,
-
-    /// @brief A flag that specifies that the sent data should not be subject to routing.
-    end_of_record = 0x02,
+    none          = 0x00,
+    dont_route    = 0x01,  /// @brief Specifies that the sent data should not be subject to routing.
+    end_of_record = 0x02,  /// @brief Specifies that the sent data terminates a record.
 };
 BITMASK_DEFINE_MAX_ELEMENT(send_flags, end_of_record)
 using send_flags_mask = bitmask::bitmask<send_flags>;
 
 /// @brief Flags used to customize calls to connection::receive().
 enum class receive_flags {
-    none = 0,
+    none = 0x00,
 
-    /// @brief A flag that specifies that the received data should be returned, but not taken off of
-    /// the input queue.
-    peek = 0x01,
+    peek = 0x01,  /// @brief A flag that specifies that the received data should be returned, but
+                  /// not taken off of the input queue.
 };
 BITMASK_DEFINE_MAX_ELEMENT(receive_flags, peek)
 using receive_flags_mask = bitmask::bitmask<receive_flags>;
@@ -44,7 +40,7 @@ class connection {
     /// @param socket_fd The open native socket's file descriptor.
     /// @param remote_endpoint An endpoint representing the remote end of the connection.
     /// @return An open connection created from an open native socket.
-    static connection from_native_socket(int socket_fd, endpoint remote_endpoint);
+    static connection from_native_socket(socket_type socket_fd, const endpoint &remote_endpoint);
 
     /// @brief Cleanup a connection.
     ~connection();
@@ -68,13 +64,13 @@ class connection {
     /// @brief Establish a connection to the resolved remote address.
     /// @param remote_endpoints The resolved remote address that this connection will attempt to
     /// connect to.
-    void connect(resolve_result remote_endpoints);
+    void connect(const resolve_result &remote_endpoints);
 
     /// @brief Establish a connection to the resolved remote address.
     /// @param remote_endpoints The resolved remote address that this connection will attempt to
     /// connect to.
     /// @param ec An error_code that is set if an error occurs.
-    void connect(resolve_result remote_endpoints, std::error_code &ec);
+    void connect(const resolve_result &remote_endpoints, std::error_code &ec);
 
     /// @brief Close this connection gracefully.
     void disconnect();
@@ -89,32 +85,26 @@ class connection {
     /// connection.
     /// @param data The data to be sent.
     /// @param ec An error_code that is set if an error occurs.
-    void send(const buffer &data, std::error_code &ec) const;
-
-    /// @brief Send the data contained in the given buffer to the remote endpoint of this
-    /// connection.
-    /// @param data The data to be sent.
     /// @param flags A bitfield of send_flags constants used to customize this call to send().
-    /// @param ec An error_code that is set if an error occurs.
-    void send(const buffer &data, send_flags_mask flags, std::error_code &ec) const;
+    void send(
+        const buffer &data, std::error_code &ec, send_flags_mask flags = send_flags::none) const;
 
-    /// @brief Return a buffer containing data send from the remote endpoint of this connection.
-    /// @return A buffer containing data send from the remote endpoint of this connection.
+    /// @brief Return a buffer containing data sent from the remote endpoint of this connection. If
+    /// the remote end of this connection is disconnected, then the buffer will be empty and this
+    /// connection will return to a closed state.
+    /// @return A buffer containing data sent from the remote endpoint of this connection.
     /// @param flags A bitfield of receive_flags constants used to customize this call to
     /// receive().
-    buffer receive(receive_flags_mask flags = receive_flags::none) const;
+    buffer receive(receive_flags_mask flags = receive_flags::none);
 
-    /// @brief Return a buffer containing data send from the remote endpoint of this connection.
-    /// @return A buffer containing data send from the remote endpoint of this connection.
+    /// @brief Return a buffer containing data sent from the remote endpoint of this connection. If
+    /// the remote end of this connection is disconnected, or an error occurs, then the buffer will
+    /// be empty and this connection will return to a closed state.
+    /// @return A buffer containing data sent from the remote endpoint of this connection.
     /// @param ec An error_code that is set if an error occurs.
-    buffer receive(std::error_code &ec) const;
-
-    /// @brief Return a buffer containing data send from the remote endpoint of this connection.
-    /// @return A buffer containing data send from the remote endpoint of this connection.
     /// @param flags A bitfield of receive_flags constants used to customize this call to
     /// receive().
-    /// @param ec An error_code that is set if an error occurs.
-    buffer receive(receive_flags_mask flags, std::error_code &ec) const;
+    buffer receive(std::error_code &ec, receive_flags_mask flags = receive_flags::none);
 
     /// @brief Return true if this connection has established a connection with a remote endpoint.
     /// @return True if this connection has established a connection with a remote endpoint.
@@ -131,8 +121,9 @@ class connection {
     endpoint remote_endpoint() const;
 
    private:
-    int socket_;
+    socket_type socket_ = 0;
     endpoint local_endpoint_;
     endpoint remote_endpoint_;
 };
+
 }  // namespace calebrjc::net

@@ -6,7 +6,9 @@ set(HEADERS
     "include/calebrjc/net/connection.hpp"
     "include/calebrjc/net/endpoint.hpp"
     "include/calebrjc/net/resolve.hpp"
+    "include/calebrjc/net/types.hpp"
     "include/calebrjc/net/detail/getaddrinfo.hpp"
+    "include/calebrjc/net/detail/poll.hpp"
     "include/calebrjc/net/detail/sockaddr_ops.hpp"
     "include/calebrjc/net/detail/socket_ops.hpp")
 
@@ -16,6 +18,7 @@ set(SOURCES
     "endpoint.cpp"
     "resolve.cpp"
     "detail/getaddrinfo.cpp"
+    "detail/poll.cpp"
     "detail/sockaddr_ops.cpp"
     "detail/socket_ops.cpp")
 

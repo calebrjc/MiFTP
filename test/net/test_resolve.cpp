@@ -41,7 +41,7 @@ CATCH_TEST_CASE("[net::resolve] Local name resolution (INADDR_ANY)", "[net]") {
     }
 
     CATCH_SECTION("Resolution is consistent with bare getaddrinfo()") {
-        auto *server_info = net::detail::getaddrinfo(name, service);
+        auto *server_info = net::detail::gai::getaddrinfo(name, service);
 
         CATCH_REQUIRE(rr_ai_compare(endpoints, server_info));
 
@@ -60,7 +60,7 @@ CATCH_TEST_CASE("[net::resolve] Local name resolution (INADDR_LOOPBACK)", "[net]
     }
 
     CATCH_SECTION("Resolution is consistent with bare getaddrinfo()") {
-        auto *server_info = net::detail::getaddrinfo(name, service);
+        auto *server_info = net::detail::gai::getaddrinfo(name, service);
 
         CATCH_REQUIRE(rr_ai_compare(endpoints, server_info));
 
@@ -79,7 +79,7 @@ CATCH_TEST_CASE("[net::resolve] Remote name resolution", "[net]") {
     }
 
     CATCH_SECTION("Resolution is consistent with bare getaddrinfo()") {
-        auto *remote_info = net::detail::getaddrinfo(name, service);
+        auto *remote_info = net::detail::gai::getaddrinfo(name, service);
 
         CATCH_REQUIRE(rr_ai_compare(endpoints, remote_info));
 

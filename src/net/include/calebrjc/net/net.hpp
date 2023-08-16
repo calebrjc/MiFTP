@@ -6,3 +6,4 @@
 #include "connection.hpp"
 #include "endpoint.hpp"
 #include "resolve.hpp"
+#include "types.hpp"

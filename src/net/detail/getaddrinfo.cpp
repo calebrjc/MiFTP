@@ -4,8 +4,9 @@
 
 #include "calebrjc/net/addresses.hpp"
 
-namespace calebrjc::net::detail {
-addrinfo *getaddrinfo(std::string hostname, std::string service) {
+namespace calebrjc::net::detail::gai {
+
+gai_result_type *getaddrinfo(std::string hostname, std::string service) {
     bool use_inaddr_any = (hostname == any_address);
 
     // Get remote address info
@@ -22,4 +23,5 @@ addrinfo *getaddrinfo(std::string hostname, std::string service) {
 
     return target_info;
 }
+
 }  // namespace calebrjc::net::detail

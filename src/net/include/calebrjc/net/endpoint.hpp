@@ -1,10 +1,13 @@
 #pragma once
 
-#include <sys/socket.h>
-
 #include <string>
 
+#include "calebrjc/net/buffer.hpp"
+#include "calebrjc/net/types.hpp"
+
 namespace calebrjc::net {
+
+/// @brief A unit of networking, used to store the address of a host computer.
 struct endpoint {
     /// @brief Create an empty endpoint.
     endpoint();
@@ -14,27 +17,28 @@ struct endpoint {
     /// @param addr The native address structure.
     /// @param addr_size The size (in bytes) of the native address structure.
     /// @return An endpoint created from a native address structure.
-    static endpoint from_native_address(int protocol, sockaddr *addr, socklen_t addr_size);
+    static endpoint from_native_address(
+        protocol_type protocol, address_type *addr, address_size_type addr_size);
 
     /// @brief Return the identifier of the address family associated with this socket.
     /// @return The identifier of the address family associated with this socket.
-    sa_family_t family() const;
+    address_family_type family() const;
 
     /// @brief Return the identifier of the protocol associated with this socket. (see: man 7 ip)
     /// @return The identifier of the protocol associated with this socket. (see: man 7 ip)
-    int protocol() const;
+    protocol_type protocol() const;
 
     /// @brief Return a pointer to the underlying native storage for this endpoint.
     /// @return A pointer to the underlying native storage for this endpoint.
-    sockaddr *data();
+    address_type *data();
 
     /// @brief Return a pointer to the underlying native storage for this endpoint.
     /// @return A pointer to the underlying native storage for this endpoint.
-    const sockaddr *data() const;
+    const address_type *data() const;
 
     /// @brief Return the size of the native address stored by this endpoint.
     /// @return The size of the native address stored by this endpoint.
-    socklen_t size() const;
+    address_size_type size() const;
 
     /// @brief Return the IP address referred to by this endpoint in string form.
     /// @return The IP address referred to by this endpoint in string form.
@@ -49,8 +53,7 @@ struct endpoint {
     std::string str() const;
 
    private:
-    int protocol_;
-    sockaddr_storage storage_;
-    socklen_t storage_size_;
+    protocol_type protocol_;
+    buffer storage_;
 };
 }  // namespace calebrjc::net

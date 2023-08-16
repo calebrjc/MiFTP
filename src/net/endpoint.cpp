@@ -4,48 +4,48 @@
 
 #include <sstream>
 
-#include "calebrjc/net/buffer.hpp"
 #include "calebrjc/net/detail/sockaddr_ops.hpp"
 
 namespace calebrjc::net {
-endpoint::endpoint() {}
 
-endpoint endpoint::from_native_address(int protocol, sockaddr *addr, socklen_t addr_size) {
+endpoint::endpoint() : protocol_(0), storage_(sizeof(sockaddr_storage)) {}
+
+endpoint endpoint::from_native_address(
+    protocol_type protocol, address_type *addr, address_size_type addr_size) {
     endpoint e;
     e.protocol_ = protocol;
+    e.storage_  = buffer(addr_size);
+
     std::memcpy(e.data(), addr, addr_size);
-    e.storage_size_ = addr_size;
 
     return e;
 }
 
-sa_family_t endpoint::family() const {
-    return storage_.ss_family;
+address_family_type endpoint::family() const {
+    return data()->sa_family;
 }
 
-int endpoint::protocol() const {
+protocol_type endpoint::protocol() const {
     return protocol_;
 }
 
-sockaddr *endpoint::data() {
-    //? Note(Caleb): Maybe use a buffer and union type?
-    return (sockaddr *)&storage_;
+address_type *endpoint::data() {
+    return storage_.as<address_type>();
 }
 
-const sockaddr *endpoint::data() const {
-    //? Note(Caleb): Maybe use a buffer and union type?
-    return (sockaddr *)&storage_;
+const address_type *endpoint::data() const {
+    return storage_.as<address_type>();
 }
 
-socklen_t endpoint::size() const {
-    return storage_size_;
+address_size_type endpoint::size() const {
+    return storage_.size();
 }
 
 std::string endpoint::addr() const {
     buffer buffer(INET6_ADDRSTRLEN);
     inet_ntop(AF_INET, detail::sockaddr_ops::get_in_addr(data()), buffer.data(), buffer.size());
 
-    switch (storage_.ss_family) {
+    switch (data()->sa_family) {
         case AF_INET:
             return std::string(buffer.data(), INET_ADDRSTRLEN);
         case AF_INET6:
@@ -56,7 +56,7 @@ std::string endpoint::addr() const {
 }
 
 std::string endpoint::port() const {
-    switch (storage_.ss_family) {
+    switch (data()->sa_family) {
         case AF_INET:
         case AF_INET6:
             return std::to_string((int)detail::sockaddr_ops::get_port(data()));
@@ -67,7 +67,7 @@ std::string endpoint::port() const {
 
 std::string endpoint::str() const {
     std::stringstream ss;
-    switch (storage_.ss_family) {
+    switch (data()->sa_family) {
         case AF_INET:
             ss << addr() << ":" << port();
             return ss.str();
@@ -78,4 +78,5 @@ std::string endpoint::str() const {
             return "INVALID:INVALID";
     }
 }
+
 }  // namespace calebrjc::net

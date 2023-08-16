@@ -1,6 +1,6 @@
-#include "calebrjc/net/net.hpp"
-
 #include <iostream>
+
+#include "calebrjc/net/net.hpp"
 
 using namespace calebrjc;
 
@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     auto server_endpoints = net::resolve(net::any_address, service, ec);
     if (ec) return 64;
 
-    acceptor.open(server_endpoints, ec, true);
+    acceptor.open(server_endpoints, ec, net::acceptor_config::reuse_address);
     if (ec) return 65;
 
     auto client_conn = acceptor.accept(ec);
