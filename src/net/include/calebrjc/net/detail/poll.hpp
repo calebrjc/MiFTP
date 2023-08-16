@@ -15,6 +15,8 @@ enum class socket_status {
     writable = 0x04,
     hung_up  = 0x08,
 };
+// Note(Caleb): Not sure why cppcheck emits this error, but everything's fine, I swear
+// cppcheck-suppress returnDanglingLifetime
 BITMASK_DEFINE_MAX_ELEMENT(socket_status, hung_up)
 using socket_status_mask = bitmask::bitmask<socket_status>;
 
@@ -37,6 +39,7 @@ using poll_result = std::vector<socket_status_info>;
 
 /// @brief A utility for polling multiple sockets.
 class poll_group {
+   public:
     /// @brief Add a socket to this poll group.
     /// @param socket_fd The socket to be added.
     void add_socket(socket_type socket_fd);
@@ -45,9 +48,15 @@ class poll_group {
     /// @param socket_fd The socket to be removed.
     void remove_socket(socket_type socket_fd);
 
-    /// @brief Return the status of all sockets in this poll group.
-    /// @return The status of all sockets in this poll group.
-    poll_result poll();
+    /// @brief Return the status of all sockets in this poll group that experienced status changes.
+    /// @param timeout_millis The timeout, in milliseconds, to wait for a state change if the socket
+    /// does not have one. A negative timeout will cause this function to block until a state change
+    /// occurs.
+    /// @return The status of all sockets in this poll group that experienced status changes.
+    poll_result poll(int timeout_millis = 0);
+
+   private:
+    std::vector<pollfd> pfds_;
 };
 
 }  // namespace calebrjc::net::detail::poll

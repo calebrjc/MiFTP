@@ -25,21 +25,43 @@ socket_status_mask ssm_from_revents(int revents) {
 }  // namespace detail
 
 socket_status_mask poll_socket(socket_type socket_fd, int timeout_millis) {
-    pollfd pollfd = {0};
-    pollfd.fd     = socket_fd;
-    pollfd.events = poll_config_mask;
+    pollfd pfd = {0};
+    pfd.fd     = socket_fd;
+    pfd.events = poll_config_mask;
 
-    int events_fired = ::poll(&pollfd, 1, timeout_millis);
+    int num_events = ::poll(&pfd, 1, timeout_millis);
 
-    return (events_fired > 0) ? detail::ssm_from_revents(pollfd.revents) : socket_status::none;
+    return (num_events > 0) ? detail::ssm_from_revents(pfd.revents) : socket_status::none;
 }
 
-void poll_group::add_socket(socket_type socket_fd) {}
+void poll_group::add_socket(socket_type socket_fd) {
+    pollfd pfd = {0};
+    pfd.fd     = socket_fd;
+    pfd.events = poll_config_mask;
 
-void poll_group::remove_socket(socket_type socket_fd) {}
+    pfds_.push_back(pfd);
+}
 
-poll_result poll_group::poll() {
-    return {};
+void poll_group::remove_socket(socket_type socket_fd) {
+    auto socket_status_info_pos =
+        std::find_if(pfds_.begin(), pfds_.end(), [&](socket_status_info info) {
+            return info.socket_fd == socket_fd;
+        });
+
+    pfds_.erase(socket_status_info_pos);
+}
+
+poll_result poll_group::poll(int timeout_millis) {
+    int num_events = ::poll(pfds_.data(), pfds_.size(), timeout_millis);
+
+    poll_result result;
+    for (const pollfd &pfd : pfds_) {
+        if (!pfd.revents) continue;
+
+        result.push_back({pfd.fd, detail::ssm_from_revents(pfd.revents)});
+    }
+
+    return result;
 }
 
 }  // namespace calebrjc::net::detail::poll
