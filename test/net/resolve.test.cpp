@@ -1,11 +1,11 @@
+#include "calebrjc/net/resolve.hpp"
+
 #include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 #define CATCH_CONFIG_PREFIX_ALL
 #include <catch2/catch_test_macros.hpp>
 
-#include "calebrjc/net/net.hpp"
+#include "calebrjc/net/addresses.hpp"
 #include "calebrjc/net/detail/getaddrinfo.hpp"
 
 using namespace calebrjc;

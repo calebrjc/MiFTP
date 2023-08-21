@@ -97,18 +97,42 @@ class connection {
     /// receive().
     buffer receive(receive_flags_mask flags = receive_flags::none);
 
+    /// @brief Return a buffer containing size bytes of data sent from the remote endpoint of this
+    /// connection. If the remote end of this connection is disconnected, then the buffer will be
+    /// empty and this connection will return to a closed state.
+    /// @return A buffer containing data sent from the remote endpoint of this connection.
+    //  @param size The number of bytes to be received.
+    /// @param flags A bitfield of receive_flags constants used to customize this call to
+    /// receive().
+    buffer receive(size_t size, receive_flags_mask flags = receive_flags::none);
+
     /// @brief Return a buffer containing data sent from the remote endpoint of this connection. If
     /// the remote end of this connection is disconnected, or an error occurs, then the buffer will
     /// be empty and this connection will return to a closed state.
     /// @return A buffer containing data sent from the remote endpoint of this connection.
+    //  @param size The number of bytes to be received.
     /// @param ec An error_code that is set if an error occurs.
     /// @param flags A bitfield of receive_flags constants used to customize this call to
     /// receive().
     buffer receive(std::error_code &ec, receive_flags_mask flags = receive_flags::none);
 
+    /// @brief Return a buffer containing size bytes of data sent from the remote endpoint of this
+    /// connection. If the remote end of this connection is disconnected, or an error occurs, then
+    /// the buffer will be empty and this connection will return to a closed state.
+    /// @return A buffer containing data sent from the remote endpoint of this connection.
+    /// @param ec An error_code that is set if an error occurs.
+    /// @param flags A bitfield of receive_flags constants used to customize this call to
+    /// receive().
+    buffer receive(
+        size_t size, std::error_code &ec, receive_flags_mask flags = receive_flags::none);
+
     /// @brief Return true if this connection has established a connection with a remote endpoint.
     /// @return True if this connection has established a connection with a remote endpoint.
     bool is_connected() const;
+
+    /// @brief Return the native socket associated with this connection.
+    /// @return The native socket associated with this connection.
+    socket_type native_socket() const;
 
     /// @brief Return the local endpoint that this connection is bound to. Invalid if no
     /// connection is established.

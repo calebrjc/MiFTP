@@ -35,6 +35,46 @@ endpoint get_endpoint(socket_type socket_fd, bool local_socket) {
 
 }  // namespace detail
 
+socket_type create_connected_socket(const resolve_result &remote_endpoints) {
+    for (const endpoint &e : remote_endpoints) {
+        int socket_fd = ::socket(e.family(), SOCK_STREAM, e.protocol());
+        if (socket_fd == -1) continue;
+
+        int connect_result = ::connect(socket_fd, e.data(), e.size());
+        if (connect_result == -1) continue;
+
+        return socket_fd;
+    }
+
+    return 0;
+}
+
+socket_type create_listening_socket(
+    const resolve_result &local_endpoints, uint64_t backlog_size, bool reuse_addr) {
+    for (const endpoint &e : local_endpoints) {
+        // Attempt to get a socket handle
+        int socket_fd = ::socket(e.family(), SOCK_STREAM, e.protocol());
+        if (socket_fd == -1) continue;
+
+        // Enable SO_REUSEADDR if necessary
+        if (reuse_addr) {
+            int on         = 1;
+            int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+            if (sso_result == -1) continue;
+        }
+
+        int bind_result = ::bind(socket_fd, e.data(), e.size());
+        if (bind_result == -1) continue;
+
+        int listen_result = ::listen(socket_fd, backlog_size);
+        if (listen_result == -1) continue;
+
+        return socket_fd;
+    }
+
+    return 0;
+}
+
 endpoint get_local_endpoint(socket_type socket_fd) {
     return detail::get_endpoint(socket_fd, true);
 }

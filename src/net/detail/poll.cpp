@@ -43,12 +43,8 @@ void poll_group::add_socket(socket_type socket_fd) {
 }
 
 void poll_group::remove_socket(socket_type socket_fd) {
-    auto socket_status_info_pos =
-        std::find_if(pfds_.begin(), pfds_.end(), [&](socket_status_info info) {
-            return info.socket_fd == socket_fd;
-        });
-
-    pfds_.erase(socket_status_info_pos);
+    auto is_target_pfd = [&](pollfd pfd) { return pfd.fd == socket_fd; };
+    pfds_.erase(std::remove_if(pfds_.begin(), pfds_.end(), is_target_pfd), pfds_.end());
 }
 
 poll_result poll_group::poll(int timeout_millis) {
@@ -62,6 +58,10 @@ poll_result poll_group::poll(int timeout_millis) {
     }
 
     return result;
+}
+
+size_t poll_group::size() const {
+    return pfds_.size();
 }
 
 }  // namespace calebrjc::net::detail::poll

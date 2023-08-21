@@ -7,7 +7,7 @@ namespace calebrjc::net {
 /// @brief The maximum size of a buffer to be used for message transceiving.
 static const size_t max_buffer_size = 8192;
 
-connection::connection() {}
+connection::connection() : socket_(0) {}
 
 connection connection::from_native_socket(socket_type socket_fd, const endpoint &remote_endpoint) {
     connection conn;
@@ -47,28 +47,29 @@ void connection::connect(const resolve_result &remote_endpoints) {
 }
 
 void connection::connect(const resolve_result &remote_endpoints, std::error_code &ec) {
-    // Attempt to create a connected socket
-    for (auto &endpoint : remote_endpoints) {
-        int socket_fd = ::socket(endpoint.family(), SOCK_STREAM, endpoint.protocol());
-        if (socket_fd == -1) { continue; }
-
-        int connect_result = ::connect(socket_fd, endpoint.data(), endpoint.size());
-        if (connect_result == -1) { continue; }
-
-        socket_          = socket_fd;
-        local_endpoint_  = detail::socket_ops::get_local_endpoint(socket_);
-        remote_endpoint_ = endpoint;
-        break;
+    if (remote_endpoints.empty()) {
+        // TODO(Caleb): Custom error categories?
+        ec.assign(1, std::system_category());
+        return;
     }
 
-    if (socket_ == 0) {
+    // Attempt to create a connected socket
+    int socket_fd = detail::socket_ops::create_connected_socket(remote_endpoints);
+
+    if (socket_fd == 0) {
         // TODO(Caleb): Custom error categories?
         ec.assign(errno, std::system_category());
         return;
     }
+
+    socket_          = socket_fd;
+    local_endpoint_  = detail::socket_ops::get_local_endpoint(socket_);
+    remote_endpoint_ = detail::socket_ops::get_remote_endpoint(socket_);
 }
 
 void connection::disconnect() {
+    if (!is_connected()) return;
+
     detail::socket_ops::close_socket(socket_);
 
     socket_          = 0;
@@ -85,6 +86,11 @@ void connection::send(const buffer &data, send_flags_mask flags) const {
 }
 
 void connection::send(const buffer &data, std::error_code &ec, send_flags_mask flags) const {
+    if (!is_connected() || data.size() == 0) {
+        ec.assign(1, std::system_category());
+        return;
+    }
+
     const char *send_buffer = data.data();
     size_t send_buffer_size = data.size();
 
@@ -110,7 +116,17 @@ void connection::send(const buffer &data, std::error_code &ec, send_flags_mask f
 buffer connection::receive(receive_flags_mask flags) {
     // Delegate function call and throw if necessary
     std::error_code ec;
-    auto data = receive(ec, flags);
+    auto data = receive(max_buffer_size, ec, flags);
+
+    if (ec) throw ec;
+
+    return data;
+}
+
+buffer connection::receive(size_t size, receive_flags_mask flags) {
+    // Delegate function call and throw if necessary
+    std::error_code ec;
+    auto data = receive(size, ec, flags);
 
     if (ec) throw ec;
 
@@ -118,13 +134,25 @@ buffer connection::receive(receive_flags_mask flags) {
 }
 
 buffer connection::receive(std::error_code &ec, receive_flags_mask flags) {
-    char receive_buffer[max_buffer_size];
+    // Delegate function call and throw if necessary
+    auto data = receive(max_buffer_size, ec, flags);
+
+    return data;
+}
+
+buffer connection::receive(size_t size, std::error_code &ec, receive_flags_mask flags) {
+    if (!is_connected() || size == 0) {
+        ec.assign(1, std::system_category());
+        return buffer();
+    }
+
+    char receive_buffer[size];
 
     // Translate flags
     int recv_flags = 0;
     recv_flags |= (flags & receive_flags::peek) ? MSG_PEEK : 0;
 
-    int recv_result = ::recv(socket_, receive_buffer, max_buffer_size, recv_flags);
+    int recv_result = ::recv(socket_, receive_buffer, size, recv_flags);
 
     if (recv_result == 0) {  // The remote endpoint is disconnected.
         disconnect();
@@ -145,7 +173,11 @@ buffer connection::receive(std::error_code &ec, receive_flags_mask flags) {
 
 bool connection::is_connected() const {
     // Note(Caleb): socket_ is only assigned after a connect(), so this is fine.
-    return socket_ == 0;
+    return socket_ != 0;
+}
+
+socket_type connection::native_socket() const {
+    return socket_;
 }
 
 endpoint connection::local_endpoint() const {

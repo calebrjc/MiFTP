@@ -79,4 +79,8 @@ std::string endpoint::str() const {
     }
 }
 
+bool endpoint::operator==(const endpoint &other) const {
+    return memcmp(data(), other.data(), size()) == 0;
+}
+
 }  // namespace calebrjc::net

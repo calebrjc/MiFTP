@@ -2,8 +2,6 @@
 // TODO(Caleb): Switch from #pragma once to proper ifdef guards
 
 #include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 using address_type         = sockaddr;
 using address_size_type    = socklen_t;

@@ -8,7 +8,7 @@
 namespace calebrjc::net {
 
 /// @brief The maximum number of connections that an acceptor may queue for accepting.
-static const int backlog_size = 128;
+static const uint64_t backlog_size = 128;
 
 acceptor::acceptor() : socket_(0) {}
 
@@ -32,40 +32,23 @@ void acceptor::open(
         return;
     }
 
-    int socket_fd = 0;
-    for (const endpoint &e : local_endpoints) {
-        // Attempt to get a socket handle
-        socket_fd = ::socket(e.family(), SOCK_STREAM, e.protocol());
-        if (socket_fd == -1) continue;
+    bool reuse_addr = (cfg & acceptor_config::reuse_address).bits();
+    socket_type socket_fd =
+        detail::socket_ops::create_listening_socket(local_endpoints, backlog_size, true);
 
-        // Enable SO_REUSEADDR if necessary
-        if (cfg & acceptor_config::reuse_address) {
-            int on         = 1;
-            int sso_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-            if (sso_result == -1) continue;
-        }
-
-        int bind_result = ::bind(socket_fd, e.data(), e.size());
-        if (bind_result == -1) continue;
-
-        socket_         = socket_fd;
-        local_endpoint_ = e;
-    }
-
-    if (socket_ == 0) {
+    if (socket_fd == 0) {
         // TODO(Caleb): Custom error categories?
-        ec.assign(errno, std::system_category());
-    }
-
-    int listen_result = ::listen(socket_fd, backlog_size);
-    if (listen_result == -1) {
-        // TODO(Caleb): Custom error categories?
-        ec.assign(errno, std::system_category());
+        ec.assign(32, std::system_category());
         return;
     }
+
+    socket_         = socket_fd;
+    local_endpoint_ = detail::socket_ops::get_local_endpoint(socket_fd);
 }
 
 void acceptor::close() {
+    if (!is_open()) return;
+
     detail::socket_ops::close_socket(socket_);
 
     socket_         = 0;
@@ -74,7 +57,7 @@ void acceptor::close() {
 
 bool acceptor::is_open() const {
     // Note(Caleb): socket_ is only assigned after a connect(), so this is fine.
-    return socket_ == 0;
+    return socket_ != 0;
 }
 
 bool acceptor::has_pending_connection() const {
@@ -93,6 +76,12 @@ connection acceptor::accept() const {
 }
 
 connection acceptor::accept(std::error_code &ec) const {
+    if (!is_open()) {
+        // TODO(Caleb): Custom error categories?
+        ec.assign(1, std::system_category());
+        return connection();
+    }
+
     address_storage_type remote_addr;
     address_size_type remote_addr_size = sizeof(remote_addr);
 

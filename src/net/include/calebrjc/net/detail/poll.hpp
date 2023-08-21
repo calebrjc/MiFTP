@@ -1,5 +1,6 @@
 #pragma once
 
+#include <poll.h>
 #include <vector>
 
 #include "bitmask/bitmask.hpp"
@@ -54,6 +55,10 @@ class poll_group {
     /// occurs.
     /// @return The status of all sockets in this poll group that experienced status changes.
     poll_result poll(int timeout_millis = 0);
+
+    /// @brief Return the number of sockets associated with this poll_group.
+    /// @return The number of sockets associated with this poll_group.
+    size_t size() const;
 
    private:
     std::vector<pollfd> pfds_;
