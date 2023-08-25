@@ -1,6 +1,7 @@
 #pragma once
 
 #include <poll.h>
+
 #include <vector>
 
 #include "bitmask/bitmask.hpp"
@@ -41,6 +42,17 @@ using poll_result = std::vector<socket_status_info>;
 /// @brief A utility for polling multiple sockets.
 class poll_group {
    public:
+    poll_group(socket_status_mask config = socket_status::readable | socket_status::writable);
+
+    // Disable copies and moves --------------------------------------------------------------------
+
+    poll_group(const poll_group &other)             = delete;
+    poll_group &operator=(const poll_group &other)  = delete;
+    poll_group(const poll_group &&other)            = delete;
+    poll_group &operator=(const poll_group &&other) = delete;
+
+    // ---------------------------------------------------------------------------------------------
+
     /// @brief Add a socket to this poll group.
     /// @param socket_fd The socket to be added.
     void add_socket(socket_type socket_fd);
@@ -62,6 +74,7 @@ class poll_group {
 
    private:
     std::vector<pollfd> pfds_;
+    int pfd_config_;
 };
 
 }  // namespace calebrjc::net::detail::poll

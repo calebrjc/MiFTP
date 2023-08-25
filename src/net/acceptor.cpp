@@ -32,9 +32,9 @@ void acceptor::open(
         return;
     }
 
-    bool reuse_addr = (cfg & acceptor_config::reuse_address).bits();
+    bool reuse_addr = (bool)(cfg & acceptor_config::reuse_address);
     socket_type socket_fd =
-        detail::socket_ops::create_listening_socket(local_endpoints, backlog_size, true);
+        detail::socket_ops::create_listening_socket(local_endpoints, backlog_size, reuse_addr);
 
     if (socket_fd == 0) {
         // TODO(Caleb): Custom error categories?

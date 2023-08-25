@@ -24,4 +24,4 @@ gai_result_type *getaddrinfo(std::string hostname, std::string service) {
     return target_info;
 }
 
-}  // namespace calebrjc::net::detail
+}  // namespace calebrjc::net::detail::gai

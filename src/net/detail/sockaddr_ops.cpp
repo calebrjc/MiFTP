@@ -21,4 +21,4 @@ uint16_t get_port(const address_type *addr) {
     return ntohs(((sockaddr_in *)addr)->sin_port);
 }
 
-}  // namespace calebrjc::net::detail
+}  // namespace calebrjc::net::detail::sockaddr_ops

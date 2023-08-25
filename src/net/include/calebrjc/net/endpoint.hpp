@@ -52,7 +52,8 @@ struct endpoint {
     /// @return A string representation of this endpoint.
     std::string str() const;
 
-    /// @brief Return true if the other endpoint can be considered equal to this one, and false otherwise.
+    /// @brief Return true if the other endpoint can be considered equal to this one, and false
+    /// otherwise.
     /// @param other The other endpoint to be compared.
     /// @return True if the other endpoint can be considered equal to this one, and false otherwise.
     bool operator==(const endpoint &other) const;

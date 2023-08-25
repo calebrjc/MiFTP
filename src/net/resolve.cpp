@@ -13,7 +13,8 @@ resolve_result resolve(const std::string &hostname, const std::string &service) 
     return result;
 }
 
-resolve_result resolve(const std::string &hostname, const std::string &service, std::error_code &ec) {
+resolve_result resolve(
+    const std::string &hostname, const std::string &service, std::error_code &ec) {
     gai_result_type *target_info = detail::gai::getaddrinfo(hostname, service);
     if (!target_info) {
         // TODO(Caleb): Error handling here

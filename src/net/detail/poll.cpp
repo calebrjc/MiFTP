@@ -4,8 +4,6 @@
 
 namespace calebrjc::net::detail::poll {
 
-static const int poll_config_mask = POLLIN | POLLOUT;
-
 namespace detail {
 
 /// @brief Return a socket_status_mask that represents the status described by revents.
@@ -27,17 +25,22 @@ socket_status_mask ssm_from_revents(int revents) {
 socket_status_mask poll_socket(socket_type socket_fd, int timeout_millis) {
     pollfd pfd = {0};
     pfd.fd     = socket_fd;
-    pfd.events = poll_config_mask;
+    pfd.events = POLLIN | POLLOUT;
 
     int num_events = ::poll(&pfd, 1, timeout_millis);
 
     return (num_events > 0) ? detail::ssm_from_revents(pfd.revents) : socket_status::none;
 }
 
+poll_group::poll_group(socket_status_mask config) {
+    pfd_config_ |= (config & socket_status::readable) ? POLLIN : 0;
+    pfd_config_ |= (config & socket_status::writable) ? POLLOUT : 0;
+}
+
 void poll_group::add_socket(socket_type socket_fd) {
     pollfd pfd = {0};
     pfd.fd     = socket_fd;
-    pfd.events = poll_config_mask;
+    pfd.events = pfd_config_;
 
     pfds_.push_back(pfd);
 }

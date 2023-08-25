@@ -14,4 +14,4 @@ void *get_in_addr(const address_type *addr);
 /// @return The port number associated with the address contained in sa.
 uint16_t get_port(const address_type *addr);
 
-}  // namespace calebrjc::net::detail
+}  // namespace calebrjc::net::detail::sockaddr_ops
