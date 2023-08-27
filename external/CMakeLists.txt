@@ -1,2 +1,1 @@
-add_subdirectory(bitmask)
-add_subdirectory(spdlog)
+add_subdirectory(yonaa)

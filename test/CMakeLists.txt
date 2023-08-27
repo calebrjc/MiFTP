@@ -10,20 +10,14 @@ FetchContent_MakeAvailable(Catch2)
 
 # Create tests target
 set(TESTS
-    "net/acceptor.test.cpp"
-    "net/connection.test.cpp"
-    "net/resolve.test.cpp"
-    "net/detail/poll.test.cpp"
-    "net/detail/socket_ops.test.cpp"
-    "net/test_utils/test_utils.hpp"
-    "net/test_utils/test_utils.cpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/miftp.test.cpp")
 
-add_executable(test_runner ${TESTS})
-target_link_libraries(test_runner PRIVATE net Catch2::Catch2WithMain pthread)
-target_compile_options(test_runner PRIVATE -g -Wall -Wextra --pedantic-errors)
+add_executable(miftp_tests ${TESTS})
+target_link_libraries(miftp_tests PRIVATE yonaa Catch2::Catch2WithMain pthread)
+target_compile_options(miftp_tests PRIVATE -g -Wall -Wextra --pedantic-errors)
 
 # Automatically register Catch2 tests
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
-catch_discover_tests(test_runner)
+catch_discover_tests(miftp_tests)
