@@ -9,11 +9,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # Create tests target
-set(TESTS
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp.test.cpp")
+set(
+    TESTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/miftp.test.cpp"
+)
 
 add_executable(miftp_tests ${TESTS})
-target_link_libraries(miftp_tests PRIVATE yonaa Catch2::Catch2WithMain pthread)
+target_link_libraries(miftp_tests PRIVATE Catch2::Catch2WithMain sftp)
 target_compile_options(miftp_tests PRIVATE -g -Wall -Wextra --pedantic-errors)
 
 # Automatically register Catch2 tests

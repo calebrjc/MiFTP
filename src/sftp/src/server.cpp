@@ -1,4 +1,4 @@
-#include "sftp_server.hpp"
+#include "sftp/server.hpp"
 
 sftp_server::sftp_server(uint16_t port) : server_(port) {
     // Mold handlers into yonaa::server handler types
@@ -69,6 +69,7 @@ void sftp_server::handle_request(yonaa::client_id client_id, const yonaa::buffer
 
     // If there is a pending request, use that request type instead
     sftp_session_info session = sessions_[client_id];
+    (void)session;
     /*
     if (session.pending_request) {
         handler_function = handlers_[session.pending_request.type];
@@ -272,6 +273,7 @@ void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &re
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
+            // - there is no pending request
             // - args[0] exists
             // - args[0] is accessible by the user
 
@@ -281,6 +283,9 @@ void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &re
 
             if not client.logged_in:
                 return -  // User is not logged in
+
+            if client.pending_request:
+                return -  // Pending request
 
             path = request.args[0]
             dirent = std::directory_entry(path)
@@ -345,6 +350,7 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
+            // - there is no currently pending request
             // - args[0] exists
             // - args[0] is accessible by the user
 
@@ -354,6 +360,9 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
 
             if not client.logged_in:
                 return -  // User is not logged in
+
+            if client.pending_request:
+                return -  // Pending request
 
             path = request.args[0]
             dirent = std::directory_entry(path)

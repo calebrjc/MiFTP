@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(
     MiFTP
-    DESCRIPTION "A minimal implementation of TFTP."
+    DESCRIPTION "A minimal implementation of SFTP."
     LANGUAGES C CXX
 )
 
@@ -19,7 +19,7 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # Conditionally enable tests
-if(BUILD_TESTING)
-    add_subdirectory(test)
+if(MIFTP_BUILD_TESTS)
     enable_testing()
+    add_subdirectory(test)
 endif()

@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <yonaa/yonaa.hpp>
 
-#include "sftp_request.hpp"
-#include "sftp_response.hpp"
+#include "sftp/request.hpp"
+#include "sftp/response.hpp"
 
 /// @brief Represents a session with a client.
 struct sftp_session_info {};

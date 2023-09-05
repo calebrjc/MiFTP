@@ -1,15 +1,17 @@
-set(MIFTP_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp/sftp_server.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp/sftp_request.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp/sftp_response.hpp"
-)
+add_subdirectory(sftp)
 
-set(MIFTP_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/miftp/sftp_server.cpp"
+add_executable(
+    miftp_client
+    "${CMAKE_CURRENT_SOURCE_DIR}/miftp_client.cpp"    
 )
+target_link_libraries(miftp_client sftp)
+target_compile_features(miftp_client PRIVATE cxx_std_17)
+target_compile_options(miftp_client PRIVATE -Wall -Wextra --pedantic-errors)
 
-add_executable(miftp ${MIFTP_HEADERS} ${MIFTP_SOURCES})
-target_link_libraries(miftp yonaa)
-target_compile_features(miftp PRIVATE cxx_std_17)
-target_compile_options(miftp PRIVATE -Wall -Wextra --pedantic-errors)
+add_executable(
+    miftp_server 
+    "${CMAKE_CURRENT_SOURCE_DIR}/miftp_server.cpp"
+)
+target_link_libraries(miftp_server sftp)
+target_compile_features(miftp_server PRIVATE cxx_std_17)
+target_compile_options(miftp_server PRIVATE -Wall -Wextra --pedantic-errors)

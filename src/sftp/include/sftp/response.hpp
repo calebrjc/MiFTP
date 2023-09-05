@@ -17,30 +17,22 @@ struct sftp_response {
     /// @brief Return a response that indicates success, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates success, with the given message.
-    static sftp_response success(std::string_view message) {
-        return sftp_response{sftp_response_type::SUCCESS, std::string{message}};
-    }
+    static sftp_response success(std::string_view message);
 
     /// @brief Return a response that indicates failure, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates failure, with the given message.
-    static sftp_response error(std::string_view message) {
-        return sftp_response{sftp_response_type::ERROR, std::string{message}};
-    }
+    static sftp_response error(std::string_view message);
 
     /// @brief Return a response that indicates a number, with the given number.
     /// @param n The number to send along with the response.
     /// @return A response that indicates a number, with the given number.
-    static sftp_response number(uint64_t n) {
-        return sftp_response{sftp_response_type::NUMBER, std::to_string(n)};
-    }
+    static sftp_response number(uint64_t n);
 
     /// @brief Return a response that indicates a successful login, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates a successful login, with the given message.
-    static sftp_response logged_in(std::string_view message) {
-        return sftp_response{sftp_response_type::LOGGED_IN, std::string{message}};
-    }
+    static sftp_response logged_in(std::string_view message);
 
    public:
     sftp_response_type type;

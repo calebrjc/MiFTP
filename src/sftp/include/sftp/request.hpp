@@ -31,10 +31,7 @@ struct sftp_request {
     /// parsed.
     /// @param raw_bytes The raw bytes to parse.
     /// @return A request from the given raw bytes, or std::nullopt if no request could be parsed.
-    static std::optional<sftp_request> from_bytes(std::string_view raw_bytes) {
-        // TODO(Caleb): Implement this properly.
-        return sftp_request{};
-    }
+    static std::optional<sftp_request> from_bytes(std::string_view raw_bytes);
 
    public:
     sftp_request_type type;
