@@ -1,6 +1,10 @@
 #include "sftp/server.hpp"
 
-sftp_server::sftp_server(uint16_t port) : server_(port) {
+#include <iostream>
+
+namespace sftp {
+
+server::server(uint16_t port) : server_(port) {
     // Mold handlers into yonaa::server handler types
     auto connect_handler      = [this](yonaa::client_id id) { handle_client_connect(id); };
     auto disconnect_handler   = [this](yonaa::client_id id) { handle_client_disconnect(id); };
@@ -18,48 +22,60 @@ sftp_server::sftp_server(uint16_t port) : server_(port) {
     // I would like for this map to be static, but because the handlers are member funcion, we need
     // a reference to `this`
     using namespace std::placeholders;
+    // clang-format off
     handlers_ = {
         // Insert a NOP for NONE
-        {sftp_request_type::NONE,
-         [](yonaa::client_id id, const sftp_request &request) {
-             (void)id;
-             (void)request;
-         }},
-
-        {sftp_request_type::USER, std::bind(&sftp_server::handle_USER, this, _1, _2)},
-        {sftp_request_type::ACCT, std::bind(&sftp_server::handle_ACCT, this, _1, _2)},
-        {sftp_request_type::PASS, std::bind(&sftp_server::handle_PASS, this, _1, _2)},
-        {sftp_request_type::TYPE, std::bind(&sftp_server::handle_TYPE, this, _1, _2)},
-        {sftp_request_type::LIST, std::bind(&sftp_server::handle_LIST, this, _1, _2)},
-        {sftp_request_type::CDIR, std::bind(&sftp_server::handle_CDIR, this, _1, _2)},
-        {sftp_request_type::KILL, std::bind(&sftp_server::handle_KILL, this, _1, _2)},
-        {sftp_request_type::NAME, std::bind(&sftp_server::handle_NAME, this, _1, _2)},
-        {sftp_request_type::TOBE, std::bind(&sftp_server::handle_NAME, this, _1, _2)},
-        {sftp_request_type::DONE, std::bind(&sftp_server::handle_DONE, this, _1, _2)},
-        {sftp_request_type::RETR, std::bind(&sftp_server::handle_RETR, this, _1, _2)},
-        {sftp_request_type::SEND, std::bind(&sftp_server::handle_RETR, this, _1, _2)},
-        {sftp_request_type::STOP, std::bind(&sftp_server::handle_RETR, this, _1, _2)},
-        {sftp_request_type::STOR, std::bind(&sftp_server::handle_STOR, this, _1, _2)},
-        {sftp_request_type::SIZE, std::bind(&sftp_server::handle_STOR, this, _1, _2)},
+        {request_type::none, [](yonaa::client_id id, const request &r) { (void)id; (void)r; }},
+        
+        {request_type::user, std::bind(&server::handle_user, this, _1, _2)},
+        {request_type::acct, std::bind(&server::handle_acct, this, _1, _2)},
+        {request_type::pass, std::bind(&server::handle_pass, this, _1, _2)},
+        {request_type::type, std::bind(&server::handle_type, this, _1, _2)},
+        {request_type::list, std::bind(&server::handle_list, this, _1, _2)},
+        {request_type::cdir, std::bind(&server::handle_cdir, this, _1, _2)},
+        {request_type::kill, std::bind(&server::handle_kill, this, _1, _2)},
+        {request_type::name, std::bind(&server::handle_name, this, _1, _2)},
+        {request_type::tobe, std::bind(&server::handle_name, this, _1, _2)},
+        {request_type::done, std::bind(&server::handle_done, this, _1, _2)},
+        {request_type::retr, std::bind(&server::handle_retr, this, _1, _2)},
+        {request_type::send, std::bind(&server::handle_retr, this, _1, _2)},
+        {request_type::stop, std::bind(&server::handle_retr, this, _1, _2)},
+        {request_type::stor, std::bind(&server::handle_stor, this, _1, _2)},
+        {request_type::size, std::bind(&server::handle_stor, this, _1, _2)},
     };
+    // clang-format on
 }
 
-void sftp_server::handle_client_connect(yonaa::client_id client_id) {
+void server::run() {
+    server_.run();
+}
+
+void server::stop() {
+    server_.stop();
+}
+
+void server::handle_client_connect(yonaa::client_id client_id) {
     (void)client_id;
+
+    YONAA_DEBUG("Client {} connected", client_id);
+    std::cout << fmt::format("Client {} connected\n", client_id);
 }
 
-void sftp_server::handle_client_disconnect(yonaa::client_id client_id) {
+void server::handle_client_disconnect(yonaa::client_id client_id) {
     (void)client_id;
+
+    YONAA_DEBUG("Client {} disconnected", client_id);
 }
 
-void sftp_server::handle_request(yonaa::client_id client_id, const yonaa::buffer &data) {
+void server::handle_request(yonaa::client_id client_id, const yonaa::buffer &data) {
     // Transform the raw data into a sensible request
-    auto raw_bytes                      = std::string_view(data.data(), data.size());
-    std::optional<sftp_request> request = sftp_request::from_bytes(raw_bytes);
+    auto raw_bytes                 = std::string_view(data.data(), data.size());
+    std::optional<request> request = request::from_bytes(raw_bytes);
 
     // If the data can't be made into a valid request, assume that this is a client that we don't
     // want to communicate with
     if (!request) {
+        YONAA_DEBUG("Client {} sent an invalid request", client_id);
         server_.remove_client(client_id);
         return;
     }
@@ -68,7 +84,7 @@ void sftp_server::handle_request(yonaa::client_id client_id, const yonaa::buffer
     request_handler handler_function = handlers_[request->type];
 
     // If there is a pending request, use that request type instead
-    sftp_session_info session = sessions_[client_id];
+    session_info session = sessions_[client_id];
     (void)session;
     /*
     if (session.pending_request) {
@@ -84,9 +100,11 @@ void sftp_server::handle_request(yonaa::client_id client_id, const yonaa::buffer
     handler_function(client_id, *request);
 }
 
-void sftp_server::handle_USER(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_user(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling USER request");
 
     // Success pre-conditions:
     // - arg count = 1
@@ -112,9 +130,11 @@ void sftp_server::handle_USER(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_ACCT(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_acct(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling ACCT request");
 
     /*
     if request.args.size() != 1
@@ -124,9 +144,11 @@ void sftp_server::handle_ACCT(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_PASS(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_pass(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling PASS request");
 
     // Success pre-conditions:
     // - arg count = 1
@@ -151,9 +173,11 @@ void sftp_server::handle_PASS(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_TYPE(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_type(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling TYPE request");
 
     /*
     if not client.logged_in:
@@ -163,9 +187,11 @@ void sftp_server::handle_TYPE(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_LIST(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_list(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling LIST request");
 
     // Success pre-conditions:
     // - the client is logged in
@@ -199,9 +225,11 @@ void sftp_server::handle_LIST(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_CDIR(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_cdir(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling CDIR request");
 
     // Success pre-conditions:
     // - the client is logged in
@@ -230,9 +258,11 @@ void sftp_server::handle_CDIR(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_KILL(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_kill(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling KILL request");
 
     // Success pre-conditions:
     // - the client is logged in
@@ -264,12 +294,14 @@ void sftp_server::handle_KILL(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_name(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
 
     switch (request.type) {
-        case sftp_request_type::NAME:
+        case request_type::name:
+            YONAA_DEBUG("Handling NAME request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
@@ -300,7 +332,9 @@ void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &re
             return +  // Success
             */
 
-        case sftp_request_type::TOBE:
+        case request_type::tobe:
+            YONAA_DEBUG("Handling TOBE request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
@@ -314,7 +348,7 @@ void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &re
                 return -  // User is not logged in
 
             if not client.pending_request and client.pending_request.type !=
-            sftp_request_type::NAME: return -  // No pending rename request
+            request_type::name: return -  // No pending rename request
 
             std::filesystem::rename(client.pending_request.args[0], request.args[0])
             client.pending_request = std::nullopt
@@ -326,9 +360,11 @@ void sftp_server::handle_NAME(yonaa::client_id client_id, const sftp_request &re
     }
 }
 
-void sftp_server::handle_DONE(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_done(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
+
+    YONAA_DEBUG("Handling DONE request");
 
     // Success pre-conditions:
     // - arg count = 0
@@ -341,12 +377,14 @@ void sftp_server::handle_DONE(yonaa::client_id client_id, const sftp_request &re
     */
 }
 
-void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_retr(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
 
     switch (request.type) {
-        case sftp_request_type::RETR:
+        case request_type::retr:
+            YONAA_DEBUG("Handling RETR request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
@@ -377,11 +415,13 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
             return +  // Success
             */
 
-        case sftp_request_type::SEND:
+        case request_type::send:
+            YONAA_DEBUG("Handling SEND request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 0
-            // - there is a pending RETR request
+            // - there is a pending retr request
 
             /*
             if request.args.size() != 0
@@ -390,8 +430,8 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
             if not client.logged_in:
                 return -  // User is not logged in
 
-            if not client.pending_request and client.pending_request.type != sftp_request_type::RETR:
-                return -  // No pending RETR request
+            if not client.pending_request and client.pending_request.type !=
+            request_type::retr: return -  // No pending retr request
 
             ... send file data ...
 
@@ -399,11 +439,13 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
             return +  // Success
             */
 
-        case sftp_request_type::STOP:
+        case request_type::stop:
+            YONAA_DEBUG("Handling STOP request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 0
-            // - there is a pending RETR request
+            // - there is a pending retr request
 
             /*
             if request.args.size() != 0
@@ -411,9 +453,9 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
 
             if not client.logged_in:
                 return -  // User is not logged in
-            
-            if not client.pending_request and client.pending_request.type != sftp_request_type::RETR:
-                return -  // No pending RETR request
+
+            if not client.pending_request and client.pending_request.type !=
+            request_type::retr: return -  // No pending retr request
 
             client.pending_request = std::nullopt
             return +  // Success
@@ -424,12 +466,14 @@ void sftp_server::handle_RETR(yonaa::client_id client_id, const sftp_request &re
     }
 }
 
-void sftp_server::handle_STOR(yonaa::client_id client_id, const sftp_request &request) {
+void server::handle_stor(yonaa::client_id client_id, const request &request) {
     (void)client_id;
     (void)request;
 
     switch (request.type) {
-        case sftp_request_type::STOR:
+        case request_type::stor:
+            YONAA_DEBUG("Handling STOR request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 2
@@ -437,13 +481,17 @@ void sftp_server::handle_STOR(yonaa::client_id client_id, const sftp_request &re
             // - args[1] exists
             // - args[1] is accessible by the user
 
-        case sftp_request_type::SIZE:
+        case request_type::size:
+            YONAA_DEBUG("Handling SIZE request");
+
             // Success pre-conditions:
             // - the client is logged in
             // - arg count = 1
-            // - there is a pending STOR request
+            // - there is a pending stor request
 
         default:
             assert(0);
     }
 }
+
+}  // namespace sftp

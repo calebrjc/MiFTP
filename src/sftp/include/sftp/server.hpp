@@ -7,89 +7,50 @@
 #include "sftp/request.hpp"
 #include "sftp/response.hpp"
 
+namespace sftp {
+
 /// @brief Represents a session with a client.
-struct sftp_session_info {};
+struct session_info {};
 
 /// @brief Represents a server that handles SFTP requests.
-class sftp_server {
+class server {
    public:
-    /// @brief Constructs a new sftp_server on the given port.
+    /// @brief Constructs a new server on the given port.
     /// @param port The port to listen on.
-    sftp_server(uint16_t port);
+    server(uint16_t port);
 
-    /// @brief Handles the addition of a new client.
-    /// @param client_id The id of the client that connected.
-    void handle_client_connect(yonaa::client_id client_id);
+    /// @brief Run the server.
+    void run();
 
-    /// @brief Handles the removal of a client.
-    /// @param client_id The id of the client that disconnected.
-    void handle_client_disconnect(yonaa::client_id client_id);
-
-    /// @brief Handles a request from a client.
-    /// @param client_id The id of the client that sent the request.
-    /// @param data The data sent by the client.
-    void handle_request(yonaa::client_id client_id, const yonaa::buffer &data);
-
-    /// @brief Handles a USER request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_USER(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles an ACCT request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_ACCT(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a PASS request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_PASS(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a TYPE request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_TYPE(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a LIST request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_LIST(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a CDIR request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_CDIR(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a KILL request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_KILL(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a NAME request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_NAME(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a TOBE request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_DONE(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a RETR request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_RETR(yonaa::client_id client_id, const sftp_request &request);
-
-    /// @brief Handles a SEND request.
-    /// @param client_id The id of the client that sent the request.
-    /// @param request The request sent by the client.
-    void handle_STOR(yonaa::client_id client_id, const sftp_request &request);
+    /// @brief Stop the server.
+    void stop();
 
    private:
-    using request_handler = std::function<void(yonaa::client_id, const sftp_request &)>;
+    using request_handler = std::function<void(yonaa::client_id, const request &)>;
+
+   private:
+    void send_response(yonaa::client_id client_id, const response &response);
+
+    void handle_client_connect(yonaa::client_id client_id);
+    void handle_client_disconnect(yonaa::client_id client_id);
+    void handle_request(yonaa::client_id client_id, const yonaa::buffer &data);
+
+    void handle_user(yonaa::client_id client_id, const request &request);
+    void handle_acct(yonaa::client_id client_id, const request &request);
+    void handle_pass(yonaa::client_id client_id, const request &request);
+    void handle_type(yonaa::client_id client_id, const request &request);
+    void handle_list(yonaa::client_id client_id, const request &request);
+    void handle_cdir(yonaa::client_id client_id, const request &request);
+    void handle_kill(yonaa::client_id client_id, const request &request);
+    void handle_name(yonaa::client_id client_id, const request &request);
+    void handle_done(yonaa::client_id client_id, const request &request);
+    void handle_retr(yonaa::client_id client_id, const request &request);
+    void handle_stor(yonaa::client_id client_id, const request &request);
 
    private:
     yonaa::server server_;
-    std::unordered_map<sftp_request_type, request_handler> handlers_;
-    std::unordered_map<yonaa::client_id, sftp_session_info> sessions_;
+    std::unordered_map<request_type, request_handler> handlers_;
+    std::unordered_map<yonaa::client_id, session_info> sessions_;
 };
+
+}  // namespace sftp

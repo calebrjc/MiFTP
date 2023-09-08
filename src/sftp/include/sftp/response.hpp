@@ -2,8 +2,10 @@
 
 #include <string>
 
+namespace sftp {
+
 /// @brief Represents the different types of responses that can be sent to the client.
-enum class sftp_response_type {
+enum class response_type {
     NONE = 0,
     SUCCESS,
     ERROR,
@@ -12,29 +14,31 @@ enum class sftp_response_type {
 };
 
 /// @brief Represents a response sent to the client.
-struct sftp_response {
+struct response {
    public:
     /// @brief Return a response that indicates success, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates success, with the given message.
-    static sftp_response success(std::string_view message);
+    static response success(std::string_view message);
 
     /// @brief Return a response that indicates failure, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates failure, with the given message.
-    static sftp_response error(std::string_view message);
+    static response error(std::string_view message);
 
     /// @brief Return a response that indicates a number, with the given number.
     /// @param n The number to send along with the response.
     /// @return A response that indicates a number, with the given number.
-    static sftp_response number(uint64_t n);
+    static response number(uint64_t n);
 
     /// @brief Return a response that indicates a successful login, with the given message.
     /// @param message The message to send along with the response.
     /// @return A response that indicates a successful login, with the given message.
-    static sftp_response logged_in(std::string_view message);
+    static response logged_in(std::string_view message);
 
    public:
-    sftp_response_type type;
+    response_type type;
     std::string message;
 };
+
+}  // namespace sftp
